@@ -1,2 +1,10 @@
+# APIs e requests
+requests>=2.31.0
+groq>=0.4.1
+
+# Interface web
 streamlit>=1.29.0
+
+# Utilidades
 python-dotenv>=1.0.0
+pydantic>=2.5.0
