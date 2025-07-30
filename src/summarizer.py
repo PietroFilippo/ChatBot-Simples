@@ -88,6 +88,71 @@ class IntelligentSummarizer:
 
         except Exception as e:
             return {"error": f"Erro na sumarização extrativa: {e}"}
+        
+    def summarize_langchain_simple(self, text: str, summary_type: str = "informative") -> Dict[str, Any]:
+        """Sumarização simples usando LangChain"""
+        if not self.methods["langchain"]["available"]:
+            return {"error": "LangChain não disponível"}
+
+        try:
+            prompts = {
+                "informative": "Faça um resumo informativo do texto abaixo:",
+                "executive": "Faça um resumo executivo do texto abaixo:",
+                "creative": "Crie um resumo criativo do texto abaixo:",
+                "technical": "Elabore um resumo técnico do texto abaixo:"
+            }
+
+            prompt_base = prompts.get(summary_type, prompts["informative"])
+
+            prompt = f"""
+            {prompt_base}
+            Texto:
+            {text}
+            Resumo:
+            """
+
+            summary = llm_manager.invoke_llm(prompt)
+
+            return {
+                "summary": summary,
+                "method": "langchain_simple",
+                "compression_ratio": len(summary) / len(text),
+                "summary_type": summary_type
+            }
+
+        except Exception as e:
+            return {"error": f"Erro LangChain simples: {e}"}
+        
+    def summarize_langchain_advanced(self, text: str, summary_type: str = "informative") -> Dict[str, Any]:
+        """Sumarização avançada usando LangChain com múltiplas etapas"""
+        if not self.methods["langchain"]["available"]:
+            return {"error": "LangChain não disponível"}
+
+        try:
+            extract_prompt = f"""
+            Extraia os 5 principais pontos do texto:
+            {text}
+            """
+
+            key_points = llm_manager.invoke_llm(extract_prompt)
+
+            summary_prompt = f"""
+            Baseado nos pontos abaixo, crie um resumo ({summary_type}):
+            {key_points}
+            """
+
+            final_summary = llm_manager.invoke_llm(summary_prompt)
+
+            return {
+                "summary": final_summary,
+                "method": "langchain_advanced",
+                "compression_ratio": len(final_summary) / len(text),
+                "summary_type": summary_type,
+                "details": {"key_points": key_points}
+            }
+
+        except Exception as e:
+            return {"error": f"Erro LangChain avançado: {e}"}
 
 # Instância global
 summarizer = IntelligentSummarizer()
