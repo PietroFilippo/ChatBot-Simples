@@ -244,3 +244,97 @@ def validate_text_input(text: str, min_length: int = 10, max_length: int = 10000
         return {"valid": False, "error": f"Texto muito longo (máximo {max_length} caracteres)"}
     
     return {"valid": True, "text": text}
+
+def create_download_link(data: Union[str, Dict], filename: str, file_type: str = "json") -> str:
+    """
+    Cria link de download para dados.
+    
+    Args:
+        data: Dados para download
+        filename: Nome do arquivo
+        file_type: Tipo do arquivo
+        
+    Returns:
+        String com dados codificados para download
+    """
+    if file_type == "json":
+        if isinstance(data, dict):
+            content = json.dumps(data, ensure_ascii=False, indent=2)
+        else:
+            content = str(data)
+    else:
+        content = str(data)
+    
+    import base64
+    b64 = base64.b64encode(content.encode()).decode()
+    
+    return f"data:application/{file_type};base64,{b64}"
+
+def get_emoji_for_sentiment(sentiment: str) -> str:
+    """
+    Retorna emoji correspondente ao sentimento.
+    
+    Args:
+        sentiment: Sentimento (positivo/negativo/neutro)
+        
+    Returns:
+        Emoji correspondente
+    """
+    emoji_map = {
+        "positivo": "😊",
+        "negativo": "😞", 
+        "neutro": "😐",
+        "positive": "😊",
+        "negative": "😞",
+        "neutral": "😐"
+    }
+    
+    return emoji_map.get(sentiment.lower(), "❓")
+
+def format_confidence_display(confidence: float) -> str:
+    """
+    Formata confiança para exibição.
+    
+    Args:
+        confidence: Valor de confiança (0-1)
+        
+    Returns:
+        String formatada com porcentagem e barras
+    """
+    percentage = confidence * 100
+    bars = "█" * int(percentage / 10)
+    empty_bars = "░" * (10 - int(percentage / 10))
+    
+    return f"{percentage:.1f}% {bars}{empty_bars}"
+
+def get_system_info() -> Dict[str, Any]:
+    """
+    Retorna informações do sistema.
+    
+    Returns:
+        Informações do sistema
+    """
+    import platform
+    import sys
+    
+    return {
+        "python_version": sys.version,
+        "platform": platform.platform(),
+        "processor": platform.processor(),
+        "timestamp": datetime.now().isoformat()
+    }
+
+# Constantes úteis
+COMMON_PHRASES = {
+    "greeting": ["olá", "oi", "hello", "hi", "bom dia", "boa tarde", "boa noite"],
+    "thanks": ["obrigado", "obrigada", "thanks", "valeu", "muito obrigado"],
+    "goodbye": ["tchau", "adeus", "bye", "goodbye", "até logo", "falou"]
+}
+
+# Regex patterns úteis
+PATTERNS = {
+    "email": r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
+    "url": r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+',
+    "phone": r'\(?\d{2}\)?\s?\d{4,5}-?\d{4}',
+    "cpf": r'\d{3}\.\d{3}\.\d{3}-\d{2}'
+} 
