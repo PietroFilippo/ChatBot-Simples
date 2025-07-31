@@ -429,3 +429,279 @@ def show_sidebar():
         ```
         """)
 
+def chatbot_tab():
+    """Interface do chatbot."""
+    st.header("💬 Chatbot Inteligente")
+    
+    # Verifica se algum provedor está disponível
+    if not llm_manager.is_any_provider_available():
+        st.error("❌ **Nenhuma API configurada**")
+        st.warning("Configure uma API para usar o chatbot. Execute: `python setup_env.py`")
+        st.info("🔗 APIs suportadas: Groq (gratuita)")
+        return
+    
+    # Informações do sistema
+    col1, col2, col3 = st.columns([2, 1, 1])
+    
+    with col1:
+        personality = st.session_state.chatbot.personality if hasattr(st.session_state, 'chatbot') else "helpful"
+        st.info(f"🎭 Personalidade atual: **{personality.title()}**")
+    
+    with col2:
+        # Indica o provedor ativo
+        provider_icons = {
+            "groq": "🚀"
+            # Espaço para outros provedores no futuro
+        }
+        icon = provider_icons.get(llm_manager.current_provider, "❓")
+        st.success(f"{icon} **{llm_manager.current_provider.title() if llm_manager.current_provider else 'N/A'}**")
+    
+    with col3:
+        stats = st.session_state.chatbot.get_stats() if hasattr(st.session_state, 'chatbot') else {"messages": 0}
+        st.metric("Mensagens", stats.get("messages", 0))
+    
+    # Interface de chat
+    chat_container = st.container()
+    
+    # Exibe o histórico
+    with chat_container:
+        for i, msg in enumerate(st.session_state.chat_history):
+            # Mensagem do usuário
+            st.markdown(f"""
+            <div style="background: #2d3748; color: #ffffff; padding: 1rem; border-radius: 10px; margin: 0.5rem 0; border-left: 4px solid #4299e1;">
+                <strong>👤 Você ({msg['timestamp']}):</strong><br>
+                {msg['user']}
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Resposta do bot
+            provider_icon = provider_icons.get(msg.get('provider', 'unknown'), "❓")
+            provider_name = msg.get('provider', 'unknown').title()
+            st.markdown(f"""
+            <div style="background: #4a5568; color: #ffffff; padding: 1rem; border-radius: 10px; margin: 0.5rem 0; border-left: 4px solid #9f7aea;">
+                <strong>{provider_icon} {provider_name} Assistant:</strong><br>
+                {msg['bot']}
+            </div>
+            """, unsafe_allow_html=True)
+    
+    # Inicializa a variável de controle se não existir
+    if 'chatbot_example_text' not in st.session_state:
+        st.session_state.chatbot_example_text = ""
+    
+    # Controles de entrada
+    # Caixa de texto principal (largura total)
+    user_input = st.text_area(
+        "Digite sua mensagem:",
+        value=st.session_state.chatbot_example_text,
+        placeholder="Faça uma pergunta ou inicie uma conversa...",
+        height=100,
+        key=f"chat_input_{len(st.session_state.chat_history)}"
+    )
+
+    
+    col1, col2, col3, col4 = st.columns([1, 1, 1, 1.3])
+    
+    with col1:
+        send_button = st.button("📤 Enviar", type="primary", key=f"send_btn_{len(st.session_state.chat_history)}")
+    
+    with col2:
+        if st.button("🧹 Limpar", key=f"clear_btn_{len(st.session_state.chat_history)}"):
+            st.session_state.chatbot.clear_memory()
+            st.session_state.chat_history = []
+            st.session_state.chatbot_example_text = ""  # Limpa também o campo de exemplo
+            st.success("Histórico limpo!")
+            st.rerun()
+    
+    with col3:
+        # Botão de exemplo
+        if st.button("🎲 Exemplo", key=f"example_btn_{len(st.session_state.chat_history)}"):
+            examples = [
+                "Olá! Como você funciona?",
+                "Explique o que é inteligência artificial",
+                "Conte uma história criativa sobre robôs",
+                "Quais são as melhores práticas de programação em Python?",
+                "Compare os prós e contras da IA",
+                "Como funciona o machine learning?"
+            ]
+            import random
+            st.session_state.chatbot_example_text = random.choice(examples)
+            st.rerun()
+    
+    with col4:
+        # Botão HTML
+        st.html("""
+        <a href="#page-top" style="
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.25rem 0.75rem;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 0.5rem;
+            text-align: center;
+            font-weight: 400;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            height: 2.5rem;
+            min-height: 2.5rem;
+            box-sizing: border-box;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 0;
+            white-space: nowrap;
+        " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)'" 
+           onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='none'"
+           onmousedown="this.style.transform='translateY(0px)'">
+            ⬆️ Voltar ao Topo
+        </a>
+        """)
+    
+    # Processa a mensagem quando botão for clicado
+    if send_button and user_input:
+        current_provider = llm_manager.current_provider or "Sistema"
+        with st.spinner(f"🤔 {current_provider.title()} está pensando..."):
+            # Valida a entrada
+            validation = validate_text_input(user_input, min_length=1, max_length=1000)
+            
+            if validation["valid"]:
+                # Obtém a resposta do chatbot
+                response = st.session_state.chatbot.chat(user_input)
+                
+                # Verifica se houve erro na resposta
+                if response.startswith("❌"):
+                    st.error(response)
+                    return
+                
+                # Adiciona ao histórico da sessão
+                timestamp = datetime.now().strftime("%H:%M")
+                st.session_state.chat_history.append({
+                    "timestamp": timestamp,
+                    "user": user_input,
+                    "bot": response,
+                    "provider": llm_manager.current_provider or "unknown"
+                })
+                
+                # Limpa o campo após enviar
+                st.session_state.chatbot_example_text = ""
+                
+                st.rerun()
+            else:
+                st.error(validation["error"])
+
+def sentiment_tab():
+    """Interface de análise de sentimentos."""
+    st.header("😀 Análise de Sentimentos")
+    
+    # Verifica se algum provedor está disponível
+    if not llm_manager.is_any_provider_available():
+        st.error("❌ **Nenhuma API configurada**")
+        st.warning("Configure uma API para usar a análise de sentimentos. Execute: `python setup_env.py`")
+        st.info("🔗 APIs suportadas: Groq (gratuita)")
+        return
+    
+    st.markdown("""
+    <div class="feature-card">
+        <h4>🎯 Análise Inteligente com LLM</h4>
+        <p>Utiliza <strong>LLM avançado</strong> para análise contextual e precisa de sentimentos com alta qualidade.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Inicializa a variável de controle se não existir
+    if 'sentiment_example_text' not in st.session_state:
+        st.session_state.sentiment_example_text = ""
+    
+    # Input de texto
+    text_input = st.text_area(
+        "📝 Digite o texto para análise:",
+        value=st.session_state.sentiment_example_text,
+        placeholder="Exemplo: Estou muito feliz com os resultados do projeto!",
+        height=150,
+        key="sentiment_text_input"
+    )
+    
+    col1, col2, col3 = st.columns([1, 1, 4])
+    
+    with col1:
+        analyze_button = st.button("🔍 Analisar", type="primary", key="sentiment_analyze_btn")
+    
+    with col2:
+        if st.button("📝 Exemplo", key="sentiment_example_btn"):
+            examples = [
+                "Estou muito feliz com os resultados do projeto! A equipe trabalhou de forma excepcional.",
+                "Infelizmente, o sistema apresentou vários bugs e falhas críticas.",
+                "O produto tem características interessantes, mas ainda precisa de melhorias.",
+                "A apresentação foi absolutamente incrível! Superou todas as expectativas."
+            ]
+            import random
+            st.session_state.sentiment_example_text = random.choice(examples)
+            st.rerun()
+    
+    # Processa a análise
+    if analyze_button and text_input:
+        validation = validate_text_input(text_input)
+        
+        if validation["valid"]:
+            text = validation["text"]
+            
+            with st.spinner("🧠 Analisando sentimentos do texto..."):
+                # Análise completa
+                results = sentiment_analyzer.analyze_comprehensive(text)
+                
+                # Estatísticas do texto
+                stats = calculate_text_stats(text)
+                
+            # Exibe os resultados
+            st.subheader("📈 Resultados da Análise")
+            
+            # Consenso geral (apenas um método por enquanto)
+            consensus = results["consensus"]
+            emoji = get_emoji_for_sentiment(consensus["sentiment"])
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown(f"""
+                <div class="metric-card">
+                    <h3>{emoji}</h3>
+                    <h4>{consensus['sentiment'].title()}</h4>
+                    <p>Sentimento</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                st.markdown(f"""
+                <div class="metric-card">
+                    <h4>{consensus['confidence']:.1%}</h4>
+                    <p>Confiança</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Resultados mais detalhados
+            st.subheader("🔬 Análise Detalhada")
+            
+            for method, result in results["individual_results"].items():
+                if "error" not in result:
+                    with st.expander(f" {method.upper()} - {result['sentiment'].title()} ({result.get('confidence', 0):.1%})"):
+                        st.json(result)
+            
+            # Estatísticas do texto
+            st.subheader("📝 Estatísticas do Texto")
+            
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric("Palavras", stats["words"])
+            with col2:
+                st.metric("Frases", stats["sentences"])
+            with col3:
+                st.metric("Caracteres", stats["characters"])
+            with col4:
+                st.metric("Palavras/Frase", stats["avg_words_per_sentence"])
+            
+        else:
+            st.error(validation["error"])
+
+
+
