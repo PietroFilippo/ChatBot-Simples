@@ -703,5 +703,263 @@ def sentiment_tab():
         else:
             st.error(validation["error"])
 
+def summarizer_tab():
+    """Interface do gerador de resumos."""
+    st.header("📝 Gerador de Resumos")
+    
+    # Verificar se algum provedor está disponível
+    if not llm_manager.is_any_provider_available():
+        st.error("❌ **Nenhuma API configurada**")
+        st.warning("Configure uma API para usar o gerador de resumos. Execute: `python setup_env.py`")
+        st.info("🔗 APIs suportadas: Groq (gratuita)")
+        return
+    
+    st.markdown("""
+    <div class="feature-card">
+        <h4>⚡ Sumarização Inteligente</h4>
+        <p>Múltiplas estratégias: <strong>Extrativa</strong> e <strong>LangChain</strong> com diferentes estilos e níveis de detalhe.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Inicializar variável de controle se não existir
+    if 'summarizer_example_text' not in st.session_state:
+        st.session_state.summarizer_example_text = ""
+    
+    # Input de texto
+    text_input = st.text_area(
+        "📄 Digite o texto para resumir:",
+        value=st.session_state.summarizer_example_text,
+        placeholder="Cole aqui um texto longo que você gostaria de resumir...",
+        height=200,
+        key="summarizer_text_input"
+    )
+    
+    # Configurações
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        summary_type = st.selectbox(
+            "🎯 Tipo de Resumo:",
+            ["informative", "executive", "creative", "technical"],
+            help="Escolha o estilo do resumo"
+        )
+    
+    with col2:
+        max_sentences = st.slider(
+            "📏 Frases (Extrativo):",
+            min_value=1, max_value=10, value=3
+        )
+    
+    with col3:
+        # Placeholder para manter o layout
+        st.write("")
+    
+    col1, col2, col3 = st.columns([1, 1, 4])
+    
+    with col1:
+        summarize_button = st.button("📋 Resumir", type="primary", key="summarizer_btn")
+    
+    with col2:
+        if st.button("📰 Exemplo", key="summarizer_example_btn"):
+            example_text = """A inteligência artificial (IA) é uma das tecnologias mais revolucionárias do século XXI, transformando drasticamente a forma como vivemos, trabalhamos e interagimos com o mundo. Desde sistemas de recomendação em plataformas de streaming até carros autônomos, a IA está presente em inúmeras aplicações do nosso cotidiano.
 
+Os modelos de linguagem de grande escala, como GPT e BERT, representam um marco significativo no processamento de linguagem natural. Estes modelos são capazes de compreender contexto, gerar texto coerente e realizar tarefas complexas de compreensão textual. A arquitetura transformer, introduzida em 2017, revolucionou o campo e se tornou a base para a maioria dos modelos de IA generativa atuais.
+
+No entanto, o desenvolvimento da IA também traz desafios importantes. Questões éticas, como viés algorítmico, privacidade de dados e o impacto no mercado de trabalho, precisam ser cuidadosamente consideradas. É essencial desenvolver IA de forma responsável, garantindo que os benefícios sejam amplamente distribuídos e os riscos minimizados.
+
+O futuro da IA promete ainda mais avanços, com pesquisas em andamento sobre IA geral artificial, computação quântica aplicada à IA e sistemas multimodais que podem processar texto, imagem e áudio simultaneamente. Estas inovações têm o potencial de resolver problemas complexos em áreas como medicina, mudanças climáticas e educação."""
+            
+            st.session_state.summarizer_example_text = example_text
+            st.rerun()
+    
+    # Processar sumarização
+    if summarize_button and text_input:
+        validation = validate_text_input(text_input, min_length=100)
+        
+        if validation["valid"]:
+            text = validation["text"]
+            
+            with st.spinner("📝 Gerando resumos..."):
+                # Sumarização completa
+                results = summarizer.summarize_comprehensive(
+                    text,
+                    num_sentences=max_sentences,
+                    summary_type=summary_type
+                )
+            
+            # Exibir resultados
+            st.subheader("📄 Resumos Gerados")
+            
+            # Estatísticas gerais
+            stats = results["statistics"]
+            
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric("Métodos", stats["successful_methods"])
+            with col2:
+                st.metric("Compressão Média", f"{stats['average_compression']:.1%}")
+            with col3:
+                st.metric("Texto Original", f"{results['original_length']} chars")
+            with col4:
+                st.metric("Melhor Método", stats["best_method"])
+            
+            # Resumos individuais
+            for method, result in results["summaries"].items():
+                if "error" not in result:
+                    compression = result.get("compression_ratio", 0)
+                    
+                    with st.expander(f"{method.upper()} - Compressão: {compression:.1%}"):
+                        st.markdown(f"**Resumo:**")
+                        st.markdown(result["summary"])
+                        
+                        if "details" in result:
+                            st.markdown("**Detalhes Técnicos:**")
+                            st.json(result["details"])
+            
+        else:
+            st.error(validation["error"])
+
+def analytics_tab():
+    """Interface de analytics e métricas."""
+    st.header("📊 Analytics e Métricas")
+    
+    # Detalhes técnicos do Groq (se disponível)
+    if llm_manager.is_groq_available():
+        provider_info = llm_manager.get_provider_info()
+        
+        # Adiciona informação do modelo atual dinamicamente
+        current_model = llm_manager.get_current_model("groq")
+        provider_info["current_model"] = current_model
+        
+        with st.expander("🔧 Detalhes Técnicos do Groq"):
+            st.json(provider_info)
+    else:
+        st.error("❌ **Sistema Groq não configurado**")
+        st.warning("Configure a API para ver as métricas completas.")
+        st.info("Execute: `python setup_env.py`")
+    
+    # Métricas dos analisadores
+    st.subheader("⚙️ Capacidades dos Analisadores")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("**😀 Análise de Sentimentos**")
+        sentiment_methods = sentiment_analyzer.get_available_methods()
+        
+        for method, info in sentiment_methods.items():
+            if info.get("available", False):
+                st.success(f"✅ {method.upper()} - {info.get('speed', 'N/A')} / {info.get('accuracy', 'N/A')}")
+            else:
+                st.error(f"❌ {method.upper()} - Indisponível")
+    
+    with col2:
+        st.markdown("**📝 Geração de Resumos**")
+        summarizer_methods = summarizer.get_available_methods()
+        
+        for method, info in summarizer_methods.items():
+            if info.get("available", False):
+                st.success(f"✅ {method.title()} - {info.get('speed', 'N/A')} / {info.get('quality', 'N/A')}")
+            else:
+                st.error(f"❌ {method.title()} - Indisponível")
+    
+    # Estatísticas da sessão
+    st.subheader("📈 Estatísticas da Sessão")
+    
+    if hasattr(st.session_state, 'chatbot'):
+        chatbot_stats = st.session_state.chatbot.get_stats()
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("Mensagens do Chat", chatbot_stats.get("messages", 0))
+        with col2:
+            st.metric("Tamanho Médio (User)", f"{chatbot_stats.get('avg_user_length', 0):.0f}")
+        with col3:
+            st.metric("Tamanho Médio (Bot)", f"{chatbot_stats.get('avg_bot_length', 0):.0f}")
+        with col4:
+            st.metric("Personalidade", chatbot_stats.get("personality", "N/A").title())
+    
+    # Modelos disponíveis
+    if llm_manager.is_groq_available():
+        st.subheader("🤖 Modelos Disponíveis")
+        
+        models = llm_manager.list_available_models()
+        current_model = llm_manager.get_current_model("groq")
+        
+        for model in models:
+            if model == current_model:
+                st.success(f"✅ **{model}** - ATIVO (Modelo atual)")
+            else:
+                st.info(f"🔄 {model} - Disponível")
+    
+    # Informações do sistema
+    st.subheader("💻 Informações do Sistema")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("**🐍 Python & Dependências:**")
+        st.code(f"""
+Python: {sys.version.split()[0]}
+Streamlit: {st.__version__}
+LangChain: Instalado
+Groq: {'Configurado' if llm_manager.is_groq_available() else 'Não configurado'}
+        """)
+    
+    with col2:
+        st.markdown("**📊 Status dos Componentes:**")
+        components_status = {
+            "Groq API": "✅ Ativo" if llm_manager.is_groq_available() else "❌ Inativo",
+            "Análise Sentimentos": "✅ Ativo" if sentiment_analyzer.get_available_methods().get("llm", {}).get("available") else "❌ Inativo",
+            "Resumos": "✅ Ativo" if summarizer.get_available_methods().get("langchain", {}).get("available") else "❌ Inativo",
+            "Chatbot": "✅ Ativo" if llm_manager.is_groq_available() else "❌ Inativo"
+        }
+        
+        for component, status in components_status.items():
+            st.markdown(f"- **{component}:** {status}")
+
+def main():
+    """Função principal da aplicação."""
+    # Inicializa o estado da sessão
+    initialize_session_state()
+    
+    # Mostra o cabeçalho
+    show_header()
+    
+    # Configura o sidebar
+    show_sidebar()
+    
+    # Cria as abas principais
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "💬 Chatbot", 
+        "📊 Sentimentos", 
+        "📝 Resumos", 
+        "📈 Analytics"
+    ])
+    
+    with tab1:
+        chatbot_tab()
+    
+    with tab2:
+        sentiment_tab()
+    
+    with tab3:
+        summarizer_tab()
+    
+    with tab4:
+        analytics_tab()
+    
+    # Footer
+    st.markdown("---")
+    st.markdown("""
+    <div style="text-align: center; color: #666; margin-top: 2rem;">
+        <p>🤖 <strong>Sistema de IA Generativa Multi-Funcional</strong></p>
+        <p><em>Tecnologias: Python • LangChain • Streamlit • Groq • NLTK</em></p>
+    </div>
+    """, unsafe_allow_html=True)
+
+if __name__ == "__main__":
+    main() 
 
