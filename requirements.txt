@@ -10,6 +10,10 @@ groq>=0.4.1
 # Interface web
 streamlit>=1.29.0
 
+# Processamento de dados
+pandas>=2.1.0
+numpy>=1.24.3
+
 # Utilidades
 python-dotenv>=1.0.0
 pydantic>=2.5.0
