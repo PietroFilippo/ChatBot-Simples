@@ -102,9 +102,9 @@ def get_advanced_settings() -> dict:
     
     try:
         criatividade = float(criatividade_input) if criatividade_input else 0.7
-        settings["criatividade"] = max(0.0, min(1.0, criatividade))
+        settings["temperature"] = max(0.0, min(1.0, criatividade))
     except ValueError:
-        settings["criatividade"] = 0.7
+        settings["temperature"] = 0.7
     
     # Max tokens
     print(f"\nMáximo de tokens por resposta:")
@@ -152,7 +152,7 @@ def create_env_file(groq_key: Optional[str], settings: dict) -> bool:
 # CONFIGURAÇÕES AVANÇADAS
 # ================================
 DEFAULT_MODEL={settings['model']}
-CRIATIVIDADE={settings['criatividade']}
+CRIATIVIDADE={settings['temperature']}
 MAX_TOKENS={settings['max_tokens']}
 
 # ================================
@@ -256,7 +256,7 @@ def main():
         else:
             settings = {
                 "model": "llama3-70b-8192",
-                "criatividade": 0.7,
+                "temperature": 0.7,
                 "max_tokens": 1000
             }
         

@@ -43,7 +43,7 @@ class LLMProvider:
                     "llm": ChatGroq(
                         api_key=groq_key,
                         model=default_model,
-                        criatividade=0.7,
+                        temperature=0.7,
                         max_tokens=1000
                     ),
                     "status": "available",
@@ -248,7 +248,7 @@ class LLMProvider:
                 self.providers["groq"]["llm"] = ChatGroq(
                     api_key=groq_key,
                     model=model,
-                    criatividade=0.7,
+                    temperature=0.7,
                     max_tokens=1000
                 )
                 self.providers["groq"]["current_model"] = model
