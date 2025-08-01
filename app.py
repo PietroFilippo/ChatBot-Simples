@@ -14,7 +14,7 @@ import json
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # Importa os módulos do projeto
-from src.llm_providers import llm_manager
+from src.llm_providers import provider_registry
 from src.chatbot import IntelligentChatbot
 from src.sentiment import sentiment_analyzer
 from src.summarizer import summarizer
@@ -183,9 +183,9 @@ def show_sidebar():
     st.sidebar.subheader("🔗 Seletor de API")
     
     # Obtem provedores disponíveis
-    providers = llm_manager.get_available_providers()
-    available_providers = [name for name, info in providers.items() if info["status"] == "available"]
-    all_providers = list(providers.keys())
+    available_providers_dict = provider_registry.get_available_providers()
+    available_providers = list(available_providers_dict.keys())  # Convert to list of names
+    all_providers = provider_registry.get_all_providers_info()
     
     if available_providers:
         # Criação do mapeamento
@@ -195,7 +195,8 @@ def show_sidebar():
         
         # Opções do selectbox
         options = [provider_names.get(p, p.title()) for p in available_providers]
-        current_index = available_providers.index(llm_manager.current_provider) if llm_manager.current_provider in available_providers else 0
+        current_provider = provider_registry.get_current_provider()
+        current_index = available_providers.index(current_provider.get_name()) if current_provider and current_provider.get_name() in available_providers else 0
         
         # Selectbox para escolher provedor
         selected_display = st.sidebar.selectbox(
@@ -213,8 +214,8 @@ def show_sidebar():
                 break
         
         # Troca o provedor se necessário
-        if selected_provider and selected_provider != llm_manager.current_provider:
-            if llm_manager.switch_provider(selected_provider):
+        if selected_provider and selected_provider != current_provider.get_name():
+            if provider_registry.switch_provider(selected_provider):
                 st.sidebar.success(f"Mudou para: {selected_display}")
                 
                 # Preserva o histórico ao trocar o provedor
@@ -228,40 +229,40 @@ def show_sidebar():
         st.sidebar.warning("Configure pelo menos uma API para usar o sistema")
     
     # Status dos provedores
-    st.sidebar.subheader("📊 Status das APIs")
-    
-    for provider, info in providers.items():
-        status_emoji = "" if info["status"] == "available" else "❌" if info["status"] == "unavailable" else "⚠️"
-        speed_info = f"({info['speed']}, {info['cost']})"
-        
-        if provider == llm_manager.current_provider:
-            st.sidebar.success(f"{status_emoji} **{provider.title()}** {speed_info} - ATIVO")
-        elif info["status"] == "available":
-            st.sidebar.info(f"{status_emoji} {provider.title()} {speed_info}")
-        else:
-            st.sidebar.error(f"{status_emoji} {provider.title()} {speed_info} - Não configurado")
+    with st.sidebar.expander("📊 Status das APIs", expanded=False):
+        for name, info in all_providers.items():
+            provider = provider_registry.get_provider(name)
+            status_emoji = "✅" if provider.is_available() else "❌"
+            speed_info = f"({info['speed']}, {info['cost']})"
+            
+            if provider == current_provider:
+                st.success(f"{status_emoji} **{name.title()}** {speed_info} - ATIVO")
+            elif provider.is_available():
+                st.info(f"{status_emoji} {name.title()} {speed_info}")
+            else:
+                st.error(f"{status_emoji} {name.title()} {speed_info} - Não configurado")
     
     # Informações detalhadas do provedor ativo
-    if llm_manager.current_provider and llm_manager.current_provider in providers:
-        current_info = providers[llm_manager.current_provider]
-        st.sidebar.markdown("---")
+    current_provider = provider_registry.get_current_provider()
+    if current_provider:
+        current_info = all_providers[current_provider.get_name()]
         
-        # API Ativa com expander
-        with st.sidebar.expander("🎯 API Ativa", expanded=True):
-            st.markdown(f"- **Nome:** {llm_manager.current_provider.title()}")
+        # API Ativa
+        with st.sidebar.expander("🎯 API Ativa"):
+            st.markdown(f"- **Nome:** {current_provider.get_name().title()}")
             st.markdown(f"- **Velocidade:** {current_info['speed'].title()}")
             st.markdown(f"- **Custo:** {current_info['cost'].title()}")
         
-        # Seletor de modelo com expander
+        # Seletor de modelo
         with st.sidebar.expander("🤖 Seletor de Modelo", expanded=False):
-            available_models = llm_manager.list_available_models(llm_manager.current_provider)
-            current_model = llm_manager.get_current_model(llm_manager.current_provider)
+            available_models = current_provider.get_available_models()
+            current_model = current_provider.get_current_model()
             
             if available_models:
                 # Cria o mapeamento para modelos
                 model_names = {
-                    "llama3-70b-8192": "🦙 Llama 3 70B (Recomendado)",
-                    "llama3-8b-8192": "🦙 Llama 3 8B (Rápido)"
+                    "llama3-70b-8192": "🦙 Llama 3 70B",
+                    "llama3-8b-8192": "🦙 Llama 3 8B"
                 }
                 
                 # Opções para o selectbox
@@ -291,7 +292,7 @@ def show_sidebar():
                 
                 # Troca o modelo se necessário
                 if selected_model and selected_model != current_model:
-                    if llm_manager.switch_model(llm_manager.current_provider, selected_model):
+                    if current_provider.switch_model(selected_model):
                         
                         # Preserva o histórico ao trocar o modelo
                         msg_count = preserve_chatbot_state()
@@ -340,9 +341,6 @@ def show_sidebar():
         
         if st.button("🔄 Recarregar APIs", key="reload_apis_sidebar"):
             # Recria o gerenciador de LLM
-            from src.llm_providers import LLMProvider
-            import src.llm_providers
-            src.llm_providers.llm_manager = LLMProvider()
             st.success("APIs recarregadas!")
             st.rerun()
     
@@ -380,11 +378,7 @@ def show_sidebar():
                 st.info(f"📊 {total_msgs} mensagens prontas para download")
             else:
                 st.error(export_result.get("error", "Erro desconhecido"))
-    elif hasattr(st.session_state, 'chatbot'):
-        st.sidebar.info("💬 Inicie uma conversa para habilitar o download")
-    else:
-        st.sidebar.warning("🤖 Chatbot não inicializado")
-    
+
     # Informações do projeto
     with st.sidebar.expander("💡 Informações do Projeto"):
         st.markdown(f"""
@@ -400,19 +394,14 @@ def show_sidebar():
         st.markdown(f"""
         - **Python:** {sys.version.split()[0]}
         - **Streamlit:** {st.__version__}
-        - **API Ativa:** {llm_manager.current_provider or 'Nenhuma'}
-        - **Status:** {providers.get(llm_manager.current_provider, {}).get('status', 'N/A')}
+        - **API Ativa:** {current_provider.get_name() if current_provider else 'Nenhuma'}
+        - **Status:** {current_provider.is_available() if current_provider else 'N/A'}
         """)
-    
-    if llm_manager.is_any_provider_available():
-        st.sidebar.success("**Sistema ativo:** Todas as funcionalidades disponíveis.")
-    else:
-        st.sidebar.error("**Sistema inativo:** Configure uma API para usar.")
 
     # Setup de APIs
-    if not llm_manager.is_any_provider_available():
+    if not provider_registry.is_any_provider_available():
         st.sidebar.subheader("Setup Necessário")
-        st.sidebar.error("⚠️ Configure uma API para usar o sistema!")
+        st.sidebar.error("⚠️ Configure uma API para usar o sistema.")
         st.sidebar.markdown("""
         **Configurar Groq (Gratuito):**
         ```bash
@@ -434,7 +423,7 @@ def chatbot_tab():
     st.header("💬 Chatbot Inteligente")
     
     # Verifica se algum provedor está disponível
-    if not llm_manager.is_any_provider_available():
+    if not provider_registry.is_any_provider_available():
         st.error("❌ **Nenhuma API configurada**")
         st.warning("Configure uma API para usar o chatbot. Execute: `python setup_env.py`")
         st.info("🔗 APIs suportadas: Groq (gratuita)")
@@ -453,8 +442,9 @@ def chatbot_tab():
             "groq": "🚀"
             # Espaço para outros provedores no futuro
         }
-        icon = provider_icons.get(llm_manager.current_provider, "❓")
-        st.success(f"{icon} **{llm_manager.current_provider.title() if llm_manager.current_provider else 'N/A'}**")
+        current_provider = provider_registry.get_current_provider()
+        icon = provider_icons.get(current_provider.get_name(), "❓")
+        st.success(f"{icon} **{current_provider.get_name().title() if current_provider else 'N/A'}**")
     
     with col3:
         stats = st.session_state.chatbot.get_stats() if hasattr(st.session_state, 'chatbot') else {"messages": 0}
@@ -560,8 +550,8 @@ def chatbot_tab():
     
     # Processa a mensagem quando botão for clicado
     if send_button and user_input:
-        current_provider = llm_manager.current_provider or "Sistema"
-        with st.spinner(f"🤔 {current_provider.title()} está pensando..."):
+        current_provider = provider_registry.get_current_provider()
+        with st.spinner(f"🤔 {current_provider.get_name().title()} está pensando..."):
             # Valida a entrada
             validation = validate_text_input(user_input, min_length=1, max_length=1000)
             
@@ -580,7 +570,7 @@ def chatbot_tab():
                     "timestamp": timestamp,
                     "user": user_input,
                     "bot": response,
-                    "provider": llm_manager.current_provider or "unknown"
+                    "provider": current_provider.get_name()
                 })
                 
                 # Limpa o campo após enviar
@@ -595,7 +585,7 @@ def sentiment_tab():
     st.header("😀 Análise de Sentimentos")
     
     # Verifica se algum provedor está disponível
-    if not llm_manager.is_any_provider_available():
+    if not provider_registry.is_any_provider_available():
         st.error("❌ **Nenhuma API configurada**")
         st.warning("Configure uma API para usar a análise de sentimentos. Execute: `python setup_env.py`")
         st.info("🔗 APIs suportadas: Groq (gratuita)")
@@ -708,7 +698,7 @@ def summarizer_tab():
     st.header("📝 Gerador de Resumos")
     
     # Verificar se algum provedor está disponível
-    if not llm_manager.is_any_provider_available():
+    if not provider_registry.is_any_provider_available():
         st.error("❌ **Nenhuma API configurada**")
         st.warning("Configure uma API para usar o gerador de resumos. Execute: `python setup_env.py`")
         st.info("🔗 APIs suportadas: Groq (gratuita)")
@@ -824,22 +814,80 @@ def analytics_tab():
     """Interface de analytics e métricas."""
     st.header("📊 Analytics e Métricas")
     
-    # Detalhes técnicos do Groq (se disponível)
-    if llm_manager.is_groq_available():
-        provider_info = llm_manager.get_provider_info()
-        
-        # Adiciona informação do modelo atual dinamicamente
-        current_model = llm_manager.get_current_model("groq")
-        provider_info["current_model"] = current_model
-        
-        with st.expander("🔧 Detalhes Técnicos do Groq"):
-            st.json(provider_info)
-    else:
-        st.error("❌ **Sistema Groq não configurado**")
-        st.warning("Configure a API para ver as métricas completas.")
-        st.info("Execute: `python setup_env.py`")
+    # Nova seção: Sistema de Provedores Extensível
+    st.subheader("🔧 Sistema de Provedores LLM")
     
-    # Métricas dos analisadores
+    # Informações sobre todos os provedores registrados
+    all_providers = provider_registry.get_all_providers_info()
+    available_providers = provider_registry.get_available_providers()
+    current_provider = provider_registry.get_current_provider()
+    
+    # Métricas de provedores
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Provedores Registrados", len(all_providers))
+    with col2:
+        st.metric("Provedores Disponíveis", len(available_providers))
+    with col3:
+        current_name = current_provider.get_name() if current_provider else "Nenhum"
+        st.metric("Provedor Ativo", current_name.title())
+    
+    # Lista de provedores com detalhes
+    st.markdown("### 🎯 Provedores Registrados")
+    
+    for name, info in all_providers.items():
+        provider = provider_registry.get_provider(name)
+        is_active = current_provider and current_provider.get_name() == name
+        is_available = provider.is_available()
+        
+        # Ícone baseado no status
+        if is_active and is_available:
+            icon = "🟢"
+            status_text = "ATIVO"
+        elif is_available:
+            icon = "🔵"
+            status_text = "DISPONÍVEL"
+        else:
+            icon = "🔴"
+            status_text = "INDISPONÍVEL"
+        
+        with st.expander(f"{icon} {name.upper()} - {status_text}"):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("**Informações Básicas:**")
+                st.markdown(f"• **Descrição:** {info.get('description', 'N/A')}")
+                st.markdown(f"• **Velocidade:** {info.get('speed', 'N/A')}")
+                st.markdown(f"• **Custo:** {info.get('cost', 'N/A')}")
+                st.markdown(f"• **Modelo Atual:** {info.get('current_model', 'N/A')}")
+                
+                # Botão para trocar provedor (se disponível)
+                if is_available and not is_active:
+                    if st.button(f"🔄 Trocar para {name.title()}", key=f"switch_{name}"):
+                        if provider_registry.switch_provider(name):
+                            st.success(f"✅ Trocado para {name.title()}!")
+                            st.rerun()
+                        else:
+                            st.error(f"❌ Erro ao trocar para {name.title()}")
+            
+            with col2:
+                st.markdown("**Estatísticas de Performance:**")
+                stats = provider.get_performance_stats()
+                for key, value in stats.items():
+                    display_key = key.replace("_", " ").title()
+                    st.markdown(f"• **{display_key}:** {value}")
+                
+                # Vantagens
+                if "advantages" in info:
+                    st.markdown("**Vantagens:**")
+                    for advantage in info["advantages"]:
+                        st.markdown(f"• {advantage}")
+    
+    # Separador visual
+    st.divider()
+    
+    # Métricas dos analisadores (seção existente)
     st.subheader("⚙️ Capacidades dos Analisadores")
     
     col1, col2 = st.columns(2)
@@ -881,12 +929,12 @@ def analytics_tab():
         with col4:
             st.metric("Personalidade", chatbot_stats.get("personality", "N/A").title())
     
-    # Modelos disponíveis
-    if llm_manager.is_groq_available():
-        st.subheader("🤖 Modelos Disponíveis")
+    # Modelos disponíveis do provedor atual
+    if current_provider and current_provider.is_available():
+        st.subheader("🤖 Modelos Disponíveis (Provedor Atual)")
         
-        models = llm_manager.list_available_models()
-        current_model = llm_manager.get_current_model("groq")
+        models = current_provider.get_available_models()
+        current_model = current_provider.get_current_model()
         
         for model in models:
             if model == current_model:
@@ -901,20 +949,26 @@ def analytics_tab():
     
     with col1:
         st.markdown("**🐍 Python & Dependências:**")
+        groq_provider = provider_registry.get_provider("groq")
+        groq_status = "Configurado" if groq_provider and groq_provider.is_available() else "Não configurado"
+        
         st.code(f"""
 Python: {sys.version.split()[0]}
 Streamlit: {st.__version__}
 LangChain: Instalado
-Groq: {'Configurado' if llm_manager.is_groq_available() else 'Não configurado'}
+Groq: {groq_status}
         """)
     
     with col2:
         st.markdown("**📊 Status dos Componentes:**")
+        groq_provider = provider_registry.get_provider("groq")
+        groq_available = groq_provider and groq_provider.is_available()
+        
         components_status = {
-            "Groq API": "✅ Ativo" if llm_manager.is_groq_available() else "❌ Inativo",
+            "Groq API": "✅ Ativo" if groq_available else "❌ Inativo",
             "Análise Sentimentos": "✅ Ativo" if sentiment_analyzer.get_available_methods().get("llm", {}).get("available") else "❌ Inativo",
             "Resumos": "✅ Ativo" if summarizer.get_available_methods().get("langchain", {}).get("available") else "❌ Inativo",
-            "Chatbot": "✅ Ativo" if llm_manager.is_groq_available() else "❌ Inativo"
+            "Chatbot": "✅ Ativo" if provider_registry.is_any_provider_available() else "❌ Inativo"
         }
         
         for component, status in components_status.items():
