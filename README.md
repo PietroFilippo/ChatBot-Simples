@@ -296,14 +296,14 @@ ENABLE_MOCK_PROVIDER=false  # Provider mock para testes
 
 ## Checklist para a Implementação
 
-- [ ] Arquivo do provedor criado
-- [ ] Todos os métodos da interface implementados
-- [ ] Tratamento de erros robusto
-- [ ] Configuração via variáveis de ambiente
-- [ ] Exportação no `__init__.py`
-- [ ] Testes básicos funcionando
-- [ ] Documentação das configurações necessárias
-- [ ] Mapeamentos de UI (se necessário)
+- Arquivo do provedor criado
+- Todos os métodos da interface implementados
+- Tratamento de erros robusto
+- Configuração via variáveis de ambiente
+- Exportação no `__init__.py`
+- Testes básicos funcionando
+- Documentação das configurações necessárias
+- Mapeamentos de UI (se necessário)
 
 ## Provedores Implementáveis
 
@@ -322,7 +322,7 @@ ENABLE_MOCK_PROVIDER=false  # Provider mock para testes
 
 ## **Para Começar Rapidamente**
 
-1. **Setup básico (2 minutos):**
+1. **Setup básico:**
    ```bash
    git clone <ChatBot-Simples>
    cd ChatBot
