@@ -249,7 +249,6 @@ O projeto inclui templates prontos em `src/providers/` para facilitar a implemen
 - Estrutura seguindo padrões do projeto
 
 ### **Templates de Configuração**
-- **README.md** em `src/providers/` - Guia completo
 - **setup_env.py** - Templates automáticos no `.env`
 - **Documentação inline** - Instruções em cada template
 
@@ -295,7 +294,7 @@ ENABLE_MOCK_PROVIDER=false  # Provider mock para testes
 - **Teste automático** da configuração
 - **Próximos passos** claros após setup
 
-## Checklist de Implementação
+## Checklist para a Implementação
 
 - [ ] Arquivo do provedor criado
 - [ ] Todos os métodos da interface implementados
@@ -305,9 +304,6 @@ ENABLE_MOCK_PROVIDER=false  # Provider mock para testes
 - [ ] Testes básicos funcionando
 - [ ] Documentação das configurações necessárias
 - [ ] Mapeamentos de UI (se necessário)
-
-## **Arquivos de Exemplo Incluídos**
-
 
 ## Provedores Implementáveis
 
