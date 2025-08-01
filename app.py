@@ -462,29 +462,88 @@ def chatbot_tab():
     with chat_container:
         message_renderer.render_conversation_history(st.session_state.chat_history)
     
-    # Inicializa variável de controle
-    if 'chatbot_example_text' not in st.session_state:
-        st.session_state.chatbot_example_text = ""
-    
-    # Coleta entrada do usuário
+    # Coleta entrada do usuário 
     user_input = input_collector.collect_chat_input(
-        st.session_state.chatbot_example_text, 
+        "", 
         len(st.session_state.chat_history)
     )
     
-    # Renderiza botões de ação
-    buttons = button_controller.create_action_buttons(len(st.session_state.chat_history))
+    # CSS personalizado para os botões do chatbot
+    st.markdown("""
+    <style>
+    /* Reduzir espaçamento entre colunas */
+    .stColumns > div {
+        padding: 0 0.25rem !important;
+    }
+    
+    /* Estilo geral para botões do chatbot */
+    .stButton > button {
+        width: 100%;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    /* Efeito hover para todos os botões */
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Renderiza botões de ação com espaçamento reduzido
+    col1, col2, col3 = st.columns([1.2, 1.5, 1])
+    
+    with col1:
+        clear_btn = st.button("🧹 Limpar", key=f"clear_btn_{len(st.session_state.chat_history)}", type="secondary")
+    
+    with col2:
+        # Botão "Voltar ao Topo" usando o método original que funcionava
+        st.html("""
+        <a href="#page-top" style="
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1rem;
+            background: rgb(255, 75, 75);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            height: 2.5rem;
+            min-height: 2.5rem;
+            box-sizing: border-box;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 0;
+            white-space: nowrap;
+            width: 100%;
+        " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.3)'" 
+           onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='none'"
+           onmousedown="this.style.transform='translateY(0px)'">
+            ⬆️ Voltar ao Topo
+        </a>
+        """)
+    
+    with col3:
+        # Espaço vazio para equilibrar o layout
+        st.empty()
     
     # Processa ações dos botões
-    if buttons["clear"]:
+    if clear_btn:
         _handle_clear_chat()
         return
     
-    if buttons["example"]:
-        _handle_example_chat()
-        return
-    
-    if buttons["send"] and user_input:
+    # Processa entrada do usuário
+    if user_input:
         _handle_send_message(user_input, validator)
 
 
@@ -492,23 +551,7 @@ def _handle_clear_chat():
     """Processa ação de limpar chat."""
     st.session_state.chatbot.clear_memory()
     st.session_state.chat_history = []
-    st.session_state.chatbot_example_text = ""
     st.success("Histórico limpo!")
-    st.rerun()
-
-
-def _handle_example_chat():
-    """Processa ação de exemplo."""
-    examples = [
-        "Olá! Como você funciona?",
-        "Explique o que é inteligência artificial",
-        "Conte uma história criativa sobre robôs",
-        "Quais são as melhores práticas de programação em Python?",
-        "Compare os prós e contras da IA",
-        "Como funciona o machine learning?"
-    ]
-    import random
-    st.session_state.chatbot_example_text = random.choice(examples)
     st.rerun()
 
 

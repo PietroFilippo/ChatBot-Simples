@@ -125,13 +125,12 @@ class InputCollector:
     
     def collect_chat_input(self, example_text: str, message_count: int) -> str:
         """Coleta entrada para chat."""
-        return st.text_area(
-            "Digite sua mensagem:",
-            value=example_text,
+        user_input = st.chat_input(
             placeholder="Faça uma pergunta ou inicie uma conversa...",
-            height=100,
             key=f"chat_input_{message_count}"
         )
+        
+        return user_input or ""
     
     def collect_text_for_analysis(self, example_text: str, placeholder: str, height: int = 150, context: str = "default") -> str:
         """Coleta texto para análise."""
