@@ -784,7 +784,7 @@ def _handle_summarization(text_input: str, settings: dict, validator, metrics_di
 def analytics_tab():
     """Interface de analytics e métricas."""
     st.header("📊 Analytics e Métricas")
-    st.subheader("📂 Provedores")
+    st.subheader("📂 Provedores e Estatísticas")
     
     # Sistema de Provedores Extensível agora em expander
     with st.expander("🔧 Sistema de Provedores LLM", expanded=False):

@@ -273,7 +273,7 @@ class SettingsPanel:
 class InputValidator:
     """Responsabilidade única: validar entrada do usuário."""
     
-    def validate_text_input(self, text: str, min_length: int = 1, max_length: int = 10000) -> Dict[str, Any]:
+    def validate_text_input(self, text: str, min_length: int = 1, max_length: int = 3000) -> Dict[str, Any]:
         """Valida entrada de texto."""
         if not text or not text.strip():
             return {
