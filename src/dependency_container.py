@@ -95,7 +95,7 @@ class DependencyContainer(IDependencyContainer):
             return self._singleton_instances[interface]
         
         self._transients[interface] = lazy_factory
-        print(f"✅ Singleton Factory registrado: {interface.__name__}")
+        print(f"Singleton Factory registrado: {interface.__name__}")
     
     def clear(self) -> None:
         """Limpa todas as dependências registradas."""

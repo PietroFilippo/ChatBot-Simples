@@ -19,7 +19,7 @@ class IntelligentSummarizer:
         self._setup_extractive()
         self._setup_langchain()
         
-        print("📝 Sumarizador inteligente inicializado!")
+        print("Sumarizador inteligente inicializado!")
     
     def _setup_extractive(self):
         """Configura sumarização extrativa."""
@@ -40,7 +40,7 @@ class IntelligentSummarizer:
                 "speed": "fast",
                 "quality": "medium"
             }
-            print("✅ Sumarização extrativa configurada")
+            print("Sumarização extrativa configurada")
             
         except Exception as e:
             print(f"⚠️  Sumarização extrativa não disponível: {e}")
@@ -54,7 +54,7 @@ class IntelligentSummarizer:
                 "speed": "slow",
                 "quality": "very_high"
             }
-            print("✅ LangChain sumarização configurado")
+            print("LangChain sumarização configurado")
         else:
             self.methods["langchain"] = {"available": False}
     

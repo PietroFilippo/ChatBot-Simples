@@ -72,6 +72,15 @@ class LLMService(ILLMService):
         except Exception:
             return "Erro"
     
+    def get_name(self) -> str:
+        """
+        Implementa IIdentifiable - retorna identificação do serviço.
+        
+        Returns:
+            Nome do serviço LLM
+        """
+        return "LLMService"
+    
     def get_provider_registry(self) -> IProviderRegistry:
         """
         Retorna o registro de provedores (para casos específicos).

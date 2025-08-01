@@ -18,7 +18,7 @@ def configure_dependencies():
     Configura todas as dependências do sistema.
     Implementa o padrão Composition Root.
     """
-    print("Configurando sistema de dependências...")
+    print("Configurando sistema de dependências")
     
     # 1. Registra o Provider Registry como singleton
     container.register_singleton(IProviderRegistry, provider_registry)
@@ -37,7 +37,7 @@ def configure_dependencies():
     
     container.register_transient(IChatbotService, lambda: chatbot_factory())
     
-    print("Dependências configuradas com sucesso!")
+    print("Dependências configuradas com sucesso.")
 
 
 def get_chatbot_with_di(personality: str = "helpful", memory_size: int = 10) -> IChatbotService:

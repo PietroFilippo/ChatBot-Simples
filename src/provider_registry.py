@@ -33,7 +33,7 @@ class ProviderRegistry(IProviderRegistry):
             self.register_provider(groq_provider)
             
         except Exception as e:
-            print(f"⚠️ Erro no auto-registro: {e}")
+            print(f"Erro no auto-registro: {e}")
     
     def register_provider(self, provider: ILLMProvider) -> bool:
         """
@@ -49,15 +49,15 @@ class ProviderRegistry(IProviderRegistry):
             provider_name = provider.get_name()
             
             if provider_name in self._providers:
-                print(f"⚠️ Provedor '{provider_name}' já existe. Substituindo...")
+                print(f"Provedor '{provider_name}' já existe. Substituindo...")
             
             self._providers[provider_name] = provider
-            print(f"✅ Provedor '{provider_name}' registrado com sucesso")
+            print(f"Provedor '{provider_name}' registrado com sucesso")
             
             return True
             
         except Exception as e:
-            print(f"❌ Erro ao registrar provedor: {e}")
+            print(f"Erro ao registrar provedor: {e}")
             return False
     
     def unregister_provider(self, provider_name: str) -> bool:
@@ -71,7 +71,7 @@ class ProviderRegistry(IProviderRegistry):
             True se removido com sucesso, False caso contrário
         """
         if provider_name not in self._providers:
-            print(f"⚠️ Provedor '{provider_name}' não encontrado")
+            print(f"Provedor '{provider_name}' não encontrado")
             return False
         
         # Se for o provedor atual, seleciona outro
@@ -81,7 +81,7 @@ class ProviderRegistry(IProviderRegistry):
         else:
             del self._providers[provider_name]
         
-        print(f"✅ Provedor '{provider_name}' removido")
+        print(f"Provedor '{provider_name}' removido")
         return True
     
     def get_provider(self, provider_name: str) -> Optional[ILLMProvider]:
@@ -130,15 +130,15 @@ class ProviderRegistry(IProviderRegistry):
         provider = self.get_provider(provider_name)
         
         if not provider:
-            print(f"❌ Provedor '{provider_name}' não encontrado")
+            print(f"Provedor '{provider_name}' não encontrado")
             return False
         
         if not provider.is_available():
-            print(f"❌ Provedor '{provider_name}' não está disponível")
+            print(f"Provedor '{provider_name}' não está disponível")
             return False
         
         self._current_provider = provider
-        print(f"✅ Trocado para provedor: {provider_name}")
+        print(f"Trocado para provedor: {provider_name}")
         return True
     
     def _select_best_provider(self):
@@ -152,17 +152,17 @@ class ProviderRegistry(IProviderRegistry):
         for preferred in preference_order:
             if preferred in available_providers:
                 self._current_provider = available_providers[preferred]
-                print(f"🎯 Provedor ativo: {preferred}")
+                print(f"Provedor ativo: {preferred}")
                 return
         
         # Se não achou nenhum preferido, pega qualquer um disponível
         if available_providers:
             provider_name = list(available_providers.keys())[0]
             self._current_provider = available_providers[provider_name]
-            print(f"🎯 Provedor ativo: {provider_name}")
+            print(f"Provedor ativo: {provider_name}")
         else:
             self._current_provider = None
-            print("⚠️ Nenhum provedor disponível")
+            print("Nenhum provedor disponível")
     
     # Métodos de compatibilidade com a interface
     def invoke_llm(self, message: str) -> str:
@@ -176,7 +176,7 @@ class ProviderRegistry(IProviderRegistry):
             Resposta do LLM ou mensagem de erro
         """
         if not self._current_provider:
-            return "❌ Nenhum provedor LLM configurado. Configure uma API key ou use o Mock Provider."
+            return "Nenhum provedor LLM configurado. Configure uma API key ou use o Mock Provider."
         
         return self._current_provider.generate_response(message)
     

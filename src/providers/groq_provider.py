@@ -42,12 +42,12 @@ class GroqProvider(ILLMProvider):
                     max_tokens=1000
                 )
                 self.status = "available"
-                print(f"✅ Groq Provider configurado com modelo {self.current_model}")
+                print(f"Groq Provider configurado com modelo {self.current_model}")
             else:
-                print("⚠️ GROQ_API_KEY não encontrada")
+                print("GROQ_API_KEY não encontrada")
                 self.status = "unavailable"
         except Exception as e:
-            print(f"❌ Erro ao configurar Groq: {e}")
+            print(f"Erro ao configurar Groq: {e}")
             self.status = "error"
     
     def get_name(self) -> str:
@@ -93,13 +93,13 @@ class GroqProvider(ILLMProvider):
     def switch_model(self, model: str) -> bool:
         """Troca o modelo ativo."""
         if model not in self.available_models:
-            print(f"❌ Modelo '{model}' não disponível para {self.name}")
+            print(f"Modelo '{model}' não disponível para {self.name}")
             return False
         
         try:
             groq_key = os.getenv("GROQ_API_KEY")
             if not groq_key:
-                print("❌ GROQ_API_KEY não encontrada")
+                print("GROQ_API_KEY não encontrada")
                 return False
             
             from langchain_groq import ChatGroq
@@ -111,11 +111,11 @@ class GroqProvider(ILLMProvider):
                 max_tokens=1000
             )
             self.current_model = model
-            print(f"✅ Modelo alterado para {model} no {self.name}")
+            print(f"Modelo alterado para {model} no {self.name}")
             return True
             
         except Exception as e:
-            print(f"❌ Erro ao trocar modelo: {e}")
+            print(f"Erro ao trocar modelo: {e}")
             return False
     
     def get_current_model(self) -> str:
