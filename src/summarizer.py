@@ -19,7 +19,7 @@ class IntelligentSummarizer:
         self._setup_extractive()
         self._setup_langchain()
         
-        print("Sumarizador inteligente inicializado!")
+        print("Sumarizador inteligente inicializado.")
     
     def _setup_extractive(self):
         """Configura sumarização extrativa."""

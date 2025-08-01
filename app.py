@@ -207,7 +207,8 @@ def show_sidebar():
             "Escolha a API:",
             options,
             index=current_index,
-            help="Selecione o provedor de LLM. Atualmente apenas Groq está disponível."
+            help="""Selecione o provedor de LLM. Atualmente apenas Groq está disponível.
+Para configurar outras APIs, baixe o repositório do projeto e siga as instruções."""
         )
         
         # Converte de volta para o nome interno
