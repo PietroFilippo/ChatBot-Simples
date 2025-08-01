@@ -517,7 +517,7 @@ def _handle_send_message(user_input: str, validator):
     
     with st.spinner(f"🤔 {current_provider.get_name().title()} está pensando..."):
         # Valida a entrada
-        validation = validator.validate_text_input(user_input, min_length=1, max_length=1000)
+        validation = validator.validate_text_input(user_input, min_length=1, max_length=3000)
         
         if validation["valid"]:
             # Obtém a resposta do chatbot
@@ -784,6 +784,7 @@ def _handle_summarization(text_input: str, settings: dict, validator, metrics_di
 def analytics_tab():
     """Interface de analytics e métricas."""
     st.header("📊 Analytics e Métricas")
+    st.subheader("📂 Provedores")
     
     # Sistema de Provedores Extensível agora em expander
     with st.expander("🔧 Sistema de Provedores LLM", expanded=False):
@@ -853,26 +854,6 @@ def analytics_tab():
                         st.markdown("**Vantagens:**")
                         for advantage in info["advantages"]:
                             st.markdown(f"• {advantage}")
-    
-    # Status das interfaces
-    st.markdown("### 📊 Status das Interfaces Segregadas")
-    
-    try:
-        # Simula verificação das interfaces disponíveis
-        interfaces_count = {
-            "Interfaces Básicas": 8,
-            "Interfaces Compostas": 12, 
-            "Interfaces de Caso de Uso": 15,
-            "Total de Interfaces": 35
-        }
-        
-        for label, count in interfaces_count.items():
-            st.success(f"✅ **{label}:** {count} disponíveis")
-            
-        st.info("🎉 **Interface Segregation Principle** implementado com sucesso!")
-        
-    except Exception as e:
-        st.error(f"❌ **Erro ao verificar interfaces:** {str(e)}")
 
     # Métricas dos analisadores
     st.subheader("⚙️ Capacidades dos Analisadores")
