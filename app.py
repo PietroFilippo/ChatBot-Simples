@@ -13,9 +13,9 @@ import json
 # Adiciona o diretório atual ao path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-# Importa os módulos do projeto
-from src.llm_providers import provider_registry
-from src.chatbot import IntelligentChatbot
+# Importar módulos do projeto
+from src.llm_providers import llm_manager, provider_registry
+from src.dependency_bootstrap import get_chatbot_with_di, get_llm_service, get_dependency_info
 from src.sentiment import sentiment_analyzer
 from src.summarizer import summarizer
 from utils.helpers import (
@@ -137,7 +137,7 @@ def preserve_chatbot_state(new_personality: str = None):
         old_personality = new_personality or st.session_state.chatbot.personality
         
         # Recria o chatbot com o mesmo estado
-        st.session_state.chatbot = IntelligentChatbot(
+        st.session_state.chatbot = get_chatbot_with_di(
             personality=old_personality
         )
         
@@ -151,7 +151,7 @@ def preserve_chatbot_state(new_personality: str = None):
 def initialize_session_state():
     """Inicializa variáveis de sessão"""
     if 'chatbot' not in st.session_state:
-        st.session_state.chatbot = IntelligentChatbot()
+        st.session_state.chatbot = get_chatbot_with_di()
     
     if 'chat_history' not in st.session_state:
         st.session_state.chat_history = []
@@ -814,78 +814,74 @@ def analytics_tab():
     """Interface de analytics e métricas."""
     st.header("📊 Analytics e Métricas")
     
-    # Nova seção: Sistema de Provedores Extensível
-    st.subheader("🔧 Sistema de Provedores LLM")
-    
-    # Informações sobre todos os provedores registrados
-    all_providers = provider_registry.get_all_providers_info()
-    available_providers = provider_registry.get_available_providers()
-    current_provider = provider_registry.get_current_provider()
-    
-    # Métricas de provedores
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.metric("Provedores Registrados", len(all_providers))
-    with col2:
-        st.metric("Provedores Disponíveis", len(available_providers))
-    with col3:
-        current_name = current_provider.get_name() if current_provider else "Nenhum"
-        st.metric("Provedor Ativo", current_name.title())
-    
-    # Lista de provedores com detalhes
-    st.markdown("### 🎯 Provedores Registrados")
-    
-    for name, info in all_providers.items():
-        provider = provider_registry.get_provider(name)
-        is_active = current_provider and current_provider.get_name() == name
-        is_available = provider.is_available()
+    # Sistema de Provedores Extensível agora em expander
+    with st.expander("🔧 Sistema de Provedores LLM", expanded=False):
+        # Informações sobre todos os provedores registrados
+        all_providers = provider_registry.get_all_providers_info()
+        available_providers = provider_registry.get_available_providers()
+        current_provider = provider_registry.get_current_provider()
         
-        # Ícone baseado no status
-        if is_active and is_available:
-            icon = "🟢"
-            status_text = "ATIVO"
-        elif is_available:
-            icon = "🔵"
-            status_text = "DISPONÍVEL"
-        else:
-            icon = "🔴"
-            status_text = "INDISPONÍVEL"
+        # Métricas de provedores
+        col1, col2, col3 = st.columns(3)
         
-        with st.expander(f"{icon} {name.upper()} - {status_text}"):
-            col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Provedores Registrados", len(all_providers))
+        with col2:
+            st.metric("Provedores Disponíveis", len(available_providers))
+        with col3:
+            current_name = current_provider.get_name() if current_provider else "Nenhum"
+            st.metric("Provedor Ativo", current_name.title())
+
+        # Lista de provedores com detalhes
+        st.markdown("### 🎯 Provedores Registrados")
+        
+        for name, info in all_providers.items():
+            provider = provider_registry.get_provider(name)
+            is_active = current_provider and current_provider.get_name() == name
+            is_available = provider.is_available()
             
-            with col1:
-                st.markdown("**Informações Básicas:**")
-                st.markdown(f"• **Descrição:** {info.get('description', 'N/A')}")
-                st.markdown(f"• **Velocidade:** {info.get('speed', 'N/A')}")
-                st.markdown(f"• **Custo:** {info.get('cost', 'N/A')}")
-                st.markdown(f"• **Modelo Atual:** {info.get('current_model', 'N/A')}")
-                
-                # Botão para trocar provedor (se disponível)
-                if is_available and not is_active:
-                    if st.button(f"🔄 Trocar para {name.title()}", key=f"switch_{name}"):
-                        if provider_registry.switch_provider(name):
-                            st.success(f"✅ Trocado para {name.title()}!")
-                            st.rerun()
-                        else:
-                            st.error(f"❌ Erro ao trocar para {name.title()}")
+            # Ícone baseado no status
+            if is_active and is_available:
+                icon = "🟢"
+                status_text = "ATIVO"
+            elif is_available:
+                icon = "🔵"
+                status_text = "DISPONÍVEL"
+            else:
+                icon = "🔴"
+                status_text = "INDISPONÍVEL"
             
-            with col2:
-                st.markdown("**Estatísticas de Performance:**")
-                stats = provider.get_performance_stats()
-                for key, value in stats.items():
-                    display_key = key.replace("_", " ").title()
-                    st.markdown(f"• **{display_key}:** {value}")
+            with st.expander(f"{icon} {name.upper()} - {status_text}"):
+                col1, col2 = st.columns(2)
                 
-                # Vantagens
-                if "advantages" in info:
-                    st.markdown("**Vantagens:**")
-                    for advantage in info["advantages"]:
-                        st.markdown(f"• {advantage}")
-    
-    # Separador visual
-    st.divider()
+                with col1:
+                    st.markdown("**Informações Básicas:**")
+                    st.markdown(f"• **Descrição:** {info.get('description', 'N/A')}")
+                    st.markdown(f"• **Velocidade:** {info.get('speed', 'N/A')}")
+                    st.markdown(f"• **Custo:** {info.get('cost', 'N/A')}")
+                    st.markdown(f"• **Modelo Atual:** {info.get('current_model', 'N/A')}")
+                    
+                    # Botão para trocar provedor (se disponível)
+                    if is_available and not is_active:
+                        if st.button(f"🔄 Trocar para {name.title()}", key=f"switch_{name}"):
+                            if provider_registry.switch_provider(name):
+                                st.success(f"✅ Trocado para {name.title()}!")
+                                st.rerun()
+                            else:
+                                st.error(f"❌ Erro ao trocar para {name.title()}")
+                
+                with col2:
+                    st.markdown("**Estatísticas de Performance:**")
+                    stats = provider.get_performance_stats()
+                    for key, value in stats.items():
+                        display_key = key.replace("_", " ").title()
+                        st.markdown(f"• **{display_key}:** {value}")
+                    
+                    # Vantagens
+                    if "advantages" in info:
+                        st.markdown("**Vantagens:**")
+                        for advantage in info["advantages"]:
+                            st.markdown(f"• {advantage}")
     
     # Métricas dos analisadores (seção existente)
     st.subheader("⚙️ Capacidades dos Analisadores")
