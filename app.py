@@ -124,6 +124,48 @@ st.markdown("""
     .feature-card p {
         color: #fafafa !important;
     }
+    
+    /* Estilos personalizados para st.chat_message */
+    .stChatMessage {
+        padding: 1rem !important;
+        margin: 0.5rem 0 !important;
+        border-radius: 10px !important;
+    }
+    
+    /* Mensagens do usuário */
+    .stChatMessage[data-testid="user"] {
+        background: #2d3748 !important;
+        border-left: 4px solid #4299e1 !important;
+    }
+    
+    /* Mensagens do assistente */
+    .stChatMessage[data-testid="assistant"] {
+        background: #4a5568 !important;
+        border-left: 4px solid #9f7aea !important;
+    }
+    
+    /* Reduzir padding excessivo das mensagens */
+    .stChatMessage > div {
+        padding: 0.5rem !important;
+    }
+    
+    /* Estilo dos avatares */
+    .stChatMessage .stChatMessageAvatarContainer {
+        min-width: 40px !important;
+        width: 40px !important;
+        height: 40px !important;
+        margin-right: 1rem !important;
+    }
+    
+    /* Conteúdo das mensagens */
+    .stChatMessage .stChatMessageContent {
+        max-width: 100% !important;
+    }
+    
+    /* Container do chat */
+    .stChatMessage {
+        scroll-margin-bottom: 100px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -391,7 +433,7 @@ Para configurar outras APIs, baixe o repositório do projeto e siga as instruç�
         - Groq API (gratuita)
         - Análise de Sentimentos (LLM)
         - Geração de Resumos
-        - Chatbot Inteligente
+        - Chatbot
         """)
     
     # Informações técnicas (expansível)
@@ -425,7 +467,7 @@ Para configurar outras APIs, baixe o repositório do projeto e siga as instruç�
 
 def chatbot_tab():
     """Interface do chatbot usando componentes especializados (SRP)."""
-    st.header("💬 Chatbot Inteligente")
+    st.header("💬 Chatbot")
     
     # Cria os componentes especializados
     components = ComponentFactory.create_chat_components()
@@ -902,10 +944,8 @@ def analytics_tab():
     # Métricas dos analisadores
     st.subheader("⚙️ Capacidades dos Analisadores")
     
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("**😀 Análise de Sentimentos**")
+    # Análise de Sentimentos em expander
+    with st.expander("😀 Análise de Sentimentos", expanded=False):
         sentiment_methods = sentiment_analyzer.get_available_methods()
         
         for method, info in sentiment_methods.items():
@@ -914,8 +954,8 @@ def analytics_tab():
             else:
                 st.error(f"❌ {method.upper()} - Indisponível")
     
-    with col2:
-        st.markdown("**📝 Geração de Resumos**")
+    # Geração de Resumos em expander
+    with st.expander("📝 Geração de Resumos", expanded=False):
         summarizer_methods = summarizer.get_available_methods()
         
         for method, info in summarizer_methods.items():
@@ -943,16 +983,15 @@ def analytics_tab():
     
     # Modelos disponíveis do provedor atual
     if current_provider and current_provider.is_available():
-        st.subheader("🤖 Modelos Disponíveis (Provedor Atual)")
-        
-        models = current_provider.get_available_models()
-        current_model = current_provider.get_current_model()
-        
-        for model in models:
-            if model == current_model:
-                st.success(f"✅ **{model}** - ATIVO (Modelo atual)")
-            else:
-                st.info(f"🔄 {model} - Disponível")
+        with st.expander("🤖 Modelos Disponíveis (Provedor Atual)", expanded=False):
+            models = current_provider.get_available_models()
+            current_model = current_provider.get_current_model()
+            
+            for model in models:
+                if model == current_model:
+                    st.success(f"✅ **{model}** - ATIVO (Modelo atual)")
+                else:
+                    st.info(f"🔄 {model} - Disponível")
     
     # Informações do sistema
     st.subheader("💻 Informações do Sistema")
@@ -1023,6 +1062,11 @@ def main():
     <div style="text-align: center; color: #666; margin-top: 2rem;">
         <p>🤖 <strong>Sistema de IA Generativa Multi-Funcional</strong></p>
         <p><em>Tecnologias: Python • LangChain • Streamlit • Groq • NLTK</em></p>
+        <p style="margin-top: 1rem;">
+            <a href="https://github.com/PietroFilippo/ChatBot-Simples" target="_blank" style="color: #667eea; text-decoration: none; font-weight: 500;">
+                Repositório no GitHub
+            </a>
+        </p>
     </div>
     """, unsafe_allow_html=True)
 

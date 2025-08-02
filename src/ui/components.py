@@ -23,28 +23,22 @@ class ChatMessageRenderer:
         }
     
     def render_user_message(self, message: str, timestamp: str) -> None:
-        """Renderiza mensagem do usuário."""
-        st.markdown(f"""
-        <div style="background: #2d3748; color: #ffffff; padding: 1rem; border-radius: 10px; margin: 0.5rem 0; border-left: 4px solid #4299e1;">
-            <strong>👤 Você ({timestamp}):</strong><br>
-            {message}
-        </div>
-        """, unsafe_allow_html=True)
+        """Renderiza mensagem do usuário usando st.chat_message."""
+        with st.chat_message("user"):
+            st.markdown(f"**👤 Você ({timestamp}):**")
+            st.markdown(message)
     
     def render_bot_message(self, message: str, provider: str) -> None:
-        """Renderiza mensagem do bot."""
+        """Renderiza mensagem do bot usando st.chat_message."""
         icon = self.provider_icons.get(provider, self.provider_icons["unknown"])
         provider_name = provider.title()
         
-        st.markdown(f"""
-        <div style="background: #4a5568; color: #ffffff; padding: 1rem; border-radius: 10px; margin: 0.5rem 0; border-left: 4px solid #9f7aea;">
-            <strong>{icon} {provider_name} Assistant:</strong><br>
-            {message}
-        </div>
-        """, unsafe_allow_html=True)
+        with st.chat_message("assistant"):
+            st.markdown(f"**{icon} {provider_name} Assistant:**")
+            st.markdown(message)
     
     def render_conversation_history(self, chat_history: List[Dict]) -> None:
-        """Renderiza todo o histórico de conversa."""
+        """Renderiza todo o histórico de conversa usando st.chat_message."""
         for msg in chat_history:
             self.render_user_message(msg['user'], msg['timestamp'])
             self.render_bot_message(msg['bot'], msg.get('provider', 'unknown'))
