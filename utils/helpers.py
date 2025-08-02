@@ -272,21 +272,83 @@ def create_download_link(data: Union[str, Dict], filename: str, file_type: str =
 
 def get_emoji_for_sentiment(sentiment: str) -> str:
     """
-    Retorna emoji correspondente ao sentimento.
+    Retorna emoji correspondente ao sentimento ou emoção.
     
     Args:
-        sentiment: Sentimento (positivo/negativo/neutro)
+        sentiment: Sentimento (positivo/negativo/neutro) ou emoção específica
         
     Returns:
         Emoji correspondente
     """
+    # Mapeamento expandido com emoções específicas
     emoji_map = {
+        # Sentimentos básicos (compatibilidade)
         "positivo": "😊",
         "negativo": "😞", 
         "neutro": "😐",
         "positive": "😊",
         "negative": "😞",
-        "neutral": "😐"
+        "neutral": "😐",
+        
+        # Emoções específicas
+        "felicidade": "😊",
+        "alegria": "😊", 
+        "contentamento": "😊",
+        "satisfação": "😊",
+        
+        "tristeza": "😢",
+        "melancolia": "😢",
+        "pesar": "😢",
+        "desânimo": "😢",
+        
+        "raiva": "😠",
+        "ira": "😠",
+        "irritação": "😠", 
+        "fúria": "😡",
+        "indignação": "😠",
+        
+        "medo": "😨",
+        "ansiedade": "😰",
+        "apreensão": "😟",
+        "temor": "😨",
+        "pânico": "😱",
+        "terror": "😱",
+        
+        "nojo": "🤢",
+        "aversão": "🤢",
+        "repulsa": "🤮",
+        "repugnância": "🤢",
+        "asco": "🤢",
+        
+        "surpresa": "😲",
+        "espanto": "😲",
+        "admiração": "😲",
+        "perplexidade": "😕",
+        "choque": "😱",
+        
+        "amor": "🥰",
+        "carinho": "🥰",
+        "afeto": "😍",
+        "ternura": "🥰",
+        "paixão": "😍",
+        "adoração": "🥰",
+        
+        "esperança": "🌟",
+        "otimismo": "🌟",
+        "expectativa": "🤞",
+        "confiança": "😌",
+        "fé": "🙏",
+        
+        "decepção": "😞",
+        "desilusão": "😞",
+        "desapontamento": "😔",
+        "frustração": "😤",
+        
+        # Estados neutros
+        "calma": "😌",
+        "serenidade": "😌",
+        "indiferença": "😐",
+        "neutralidade": "😐"
     }
     
     return emoji_map.get(sentiment.lower(), "❓")

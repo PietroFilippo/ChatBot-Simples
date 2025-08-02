@@ -650,8 +650,8 @@ def sentiment_tab():
     
     st.markdown("""
     <div class="feature-card">
-        <h4>🎯 Análise Inteligente com LLM</h4>
-        <p>Utiliza <strong>LLM avançado</strong> para análise contextual e precisa de sentimentos com alta qualidade.</p>
+        <h4>🎯 Análise Avançada de Emoções com LLM</h4>
+        <p>Utiliza <strong>LLM avançado</strong> para detectar <strong>múltiplas emoções simultâneas</strong>. Análise contextual com alta precisão e detecção de complexidade emocional.</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -685,10 +685,21 @@ def sentiment_tab():
 def _handle_sentiment_example():
     """Processa ação de exemplo para sentiment."""
     examples = [
-        "Estou muito feliz com os resultados do projeto! A equipe trabalhou de forma excepcional.",
-        "Infelizmente, o sistema apresentou vários bugs e falhas críticas.",
-        "O produto tem características interessantes, mas ainda precisa de melhorias.",
-        "A apresentação foi absolutamente incrível! Superou todas as expectativas."
+        "Estou muito feliz com os resultados do projeto! A equipe trabalhou de forma excepcional e superou todas as expectativas.",
+        
+        "Infelizmente, o sistema apresentou vários bugs críticos que me deixaram muito frustrado e preocupado com os prazos.",
+        
+        "Estou triste e com raiva ao mesmo tempo. Esperava muito mais dessa apresentação, mas foi uma grande decepção.",
+        
+        "Que surpresa incrível! Não esperava receber essa notícia hoje. Estou cheio de alegria e esperança para o futuro.",
+        
+        "Sinto uma mistura de medo e esperança. O novo projeto é desafiador, mas também pode trazer grandes oportunidades.",
+        
+        "O comportamento dele me causou nojo e indignação. Como alguém pode agir dessa forma? Estou completamente decepcionado.",
+        
+        "Amo muito essa empresa e tenho carinho por todos os colegas. Trabalhar aqui tem sido uma experiência maravilhosa.",
+        
+        "Estou ansioso e preocupado com os resultados, mas também mantenho a confiança de que tudo dará certo no final."
     ]
     import random
     st.session_state.sentiment_example_text = random.choice(examples)
@@ -702,7 +713,7 @@ def _handle_sentiment_analysis(text_input: str, validator, metrics_displayer):
     if validation["valid"]:
         text = validation["text"]
         
-        with st.spinner("🧠 Analisando sentimentos do texto..."):
+        with st.spinner("🧠 Analisando sentimentos e emoções do texto..."):
             # Análise completa
             results = sentiment_analyzer.analyze_comprehensive(text)
             
@@ -712,36 +723,135 @@ def _handle_sentiment_analysis(text_input: str, validator, metrics_displayer):
         # Exibe os resultados
         st.subheader("📈 Resultados da Análise")
         
-        # Consenso geral
-        consensus = results["consensus"]
-        emoji = get_emoji_for_sentiment(consensus["sentiment"])
+        # Análise Básica (compatibilidade)
+        if "llm" in results["individual_results"] and "error" not in results["individual_results"]["llm"]:
+            consensus = results["consensus"]
+            emoji = get_emoji_for_sentiment(consensus["sentiment"])
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown(f"""
+                <div class="metric-card">
+                    <h3>{emoji}</h3>
+                    <h4>{consensus['sentiment'].title()}</h4>
+                    <p>Sentimento Geral</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                st.markdown(f"""
+                <div class="metric-card">
+                    <h4>{consensus['confidence']:.1%}</h4>
+                    <p>Confiança</p>
+                </div>
+                """, unsafe_allow_html=True)
         
-        col1, col2 = st.columns(2)
+        # Análise Avançada de Emoções
+        if "advanced_analysis" in results and "error" not in results["advanced_analysis"]:
+            advanced = results["advanced_analysis"]
+            
+            st.subheader("🎭 Análise Avançada de Emoções")
+            
+            # Informações gerais da análise avançada
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.markdown(f"""
+                <div class="metric-card">
+                    <h3>{advanced['primary_emoji']}</h3>
+                    <h4>{advanced['primary_emotion'].title()}</h4>
+                    <p>Emoção Primária</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                complexity_emoji = {"simple": "🔵", "moderate": "🟡", "complex": "🔴"}
+                st.markdown(f"""
+                <div class="metric-card">
+                    <h3>{complexity_emoji.get(advanced['emotional_complexity'], '⚪')}</h3>
+                    <h4>{advanced['emotional_complexity'].title()}</h4>
+                    <p>Complexidade</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col3:
+                sentiment_emoji = {
+                    "positive": "😊", "negative": "😞", 
+                    "neutral": "😐", "mixed": "🎭"
+                }
+                st.markdown(f"""
+                <div class="metric-card">
+                    <h3>{sentiment_emoji.get(advanced['overall_sentiment'], '❓')}</h3>
+                    <h4>{advanced['overall_sentiment'].title()}</h4>
+                    <p>Tom Geral</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col4:
+                st.markdown(f"""
+                <div class="metric-card">
+                    <h4>{advanced['emotions_count']}</h4>
+                    <p>Emoções Detectadas</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Lista detalhada de emoções
+            if advanced["emotions"]:
+                st.subheader("🔍 Emoções Detectadas")
+                
+                # Ordena emoções por intensidade
+                emotions_sorted = sorted(advanced["emotions"], key=lambda x: x["intensity"], reverse=True)
+                
+                for emotion in emotions_sorted:
+                    # Determina a cor da barra baseada na categoria
+                    color_map = {
+                        "positive": "#28a745",  # Verde
+                        "negative": "#dc3545",  # Vermelho
+                        "neutral": "#6c757d"    # Cinza
+                    }
+                    color = color_map.get(emotion["category"], "#6c757d")
+                    
+                    # Cria uma barra de progresso visual
+                    intensity_percent = emotion["intensity"] * 100
+                    confidence_percent = emotion["confidence"] * 100
+                    
+                    with st.expander(f"{emotion['emoji']} {emotion['emotion'].title()} - Intensidade: {intensity_percent:.0f}%"):
+                        col1, col2 = st.columns([3, 1])
+                        
+                        with col1:
+                            # Barra de intensidade
+                            st.markdown("**Intensidade:**")
+                            st.progress(emotion["intensity"])
+                            
+                            # Barra de confiança
+                            st.markdown("**Confiança:**")
+                            st.progress(emotion["confidence"])
+                            
+                            st.markdown(f"**Categoria:** {emotion['category'].title()}")
+                        
+                        with col2:
+                            st.markdown(f"""
+                            <div style="text-align: center; padding: 1rem; border-radius: 8px; background: {color}20; border: 2px solid {color};">
+                                <div style="font-size: 2rem;">{emotion['emoji']}</div>
+                                <div style="font-weight: bold; color: {color};">{emotion['emotion'].title()}</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+            
+            # Explicação da análise
+            if advanced.get("explanation"):
+                st.subheader("💬 Explicação da Análise")
+                st.info(advanced["explanation"])
         
-        with col1:
-            st.markdown(f"""
-            <div class="metric-card">
-                <h3>{emoji}</h3>
-                <h4>{consensus['sentiment'].title()}</h4>
-                <p>Sentimento</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            st.markdown(f"""
-            <div class="metric-card">
-                <h4>{consensus['confidence']:.1%}</h4>
-                <p>Confiança</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Resultados detalhados
-        st.subheader("🔬 Análise Detalhada")
-        
-        for method, result in results["individual_results"].items():
-            if "error" not in result:
-                with st.expander(f" {method.upper()} - {result['sentiment'].title()} ({result.get('confidence', 0):.1%})"):
-                    st.json(result)
+        # Resultados detalhados (expander)
+        with st.expander("🔬 Análise Técnica Detalhada", expanded=False):
+            if "llm" in results["individual_results"]:
+                st.markdown("**Análise LLM Básica:**")
+                st.json(results["individual_results"]["llm"])
+            
+            if "advanced_analysis" in results:
+                st.markdown("**Análise Avançada de Emoções:**")
+                st.json(results["advanced_analysis"])
         
         # Renderiza estatísticas usando componente especializado
         st.subheader("📝 Estatísticas do Texto")
@@ -835,7 +945,7 @@ def _handle_summarization(text_input: str, settings: dict, validator, metrics_di
             )
         
         # Exibir resultados
-        st.subheader("📄 Resumos Gerados")
+        st.subheader("📝 Resumos Gerados")
         
         # Estatísticas gerais
         stats = results["statistics"]
