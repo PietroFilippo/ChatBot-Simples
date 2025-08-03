@@ -8,18 +8,17 @@
 - **Auto-Discovery** - Novos provedores são detectados e registrados automaticamente  
 - **Fallback Inteligente** - Sistema escolhe o melhor provedor disponível
 - **Zero Regressão** - Código existente permanece intocado ao adicionar funcionalidades
-
-## Funcionalidades Principais
+- **Configurações Globais Centralizadas** - Parâmetros unificados para todos os providers
 
 ### Chatbot Inteligente
 - **Conversa natural** com memória de contexto
 - **Diferentes personalidades** configuráveis (helpful, creative, technical)
 - **Switching dinâmico** entre provedores LLM
-- **Export de conversas** em JSON/TXT
+- **Interface moderna** com componentes UI especializados
 
 ### Análise de Sentimentos
 - **Análise contextual** usando LLM
-- **Precisão alta** em diferentes linguas
+- **Precisão alta** em diferentes linguages
 - **Explicações detalhadas** dos resultados
 - **Métricas de confiança** precisas
 
@@ -33,12 +32,14 @@
 - **Status em tempo real** dos provedores
 - **Métricas de performance** e uso
 - **Estatísticas da sessão** detalhadas
+- **Dashboard de configurações globais**
 
 ## Tecnologias Utilizadas
 
 - **🐍 Python 3.8+** - Linguagem principal
 - **🔗 LangChain** - Framework para aplicações LLM
 - **🚀 Groq API** - LLM rápido e gratuito (Llama 3, Mixtral)
+- **🤗 Hugging Face** - 91+ modelos open-source via API unificada
 - **📱 Streamlit** - Interface web interativa
 - **📊 NLTK** - Processamento de linguagem natural
 - **🔧 Pydantic** - Validação de dados
@@ -58,27 +59,41 @@ cd ChatBot
 pip install -r requirements.txt
 ```
 
-### 3. **Configuração Multi-Provider**
+### 3. **Configuração Multi-Provider Automatizada**
 
-O sistema inclui um setup automático que configura Groq + templates para outros providers caso precise:
+O sistema inclui um setup inteligente que configura automaticamente **Groq** e **Hugging Face**, além de gerar templates para outros providers:
 
 ```bash
 python setup_env.py
 ```
 
 **O que o setup faz:**
-- **Configura Groq** (gratuito) - principal provider
+- **Configura Groq** (gratuito) - provider principal ultra-rápido
+- **Configura Hugging Face** (gratuito) - 91+ modelos open-source disponíveis
 - **Gera templates prontos** para OpenAI, Claude, Gemini, etc.
-- **Configurações globais** (timeout, retry, debug)
+- **Configurações globais centralizadas** (timeout, retry, debug)
 - **Documentação inline** com links e instruções
+- **Validação automática** de chaves API
+- **Teste de configuração** pós-setup
 
-#### **Setup Manual Alternativo**
+#### **Configuração Manual Alternativa**
 Ou também, para configuração manual, crie o arquivo `.env`:
 ```env
+# Provider principal (ultra-rápido)
 GROQ_API_KEY=sua_chave_groq_aqui
+
+# Provider com múltiplos modelos open-source  
+HUGGINGFACE_API_KEY=sua_chave_hf_aqui
+
+# Configurações globais (aplicadas a todos os providers)
+GLOBAL_TEMPERATURE=0.7
+GLOBAL_MAX_TOKENS=1000
+API_TIMEOUT=30
 ```
 
-**Para obter uma chave Groq gratuita**: [console.groq.com](https://console.groq.com/)
+**Para obter chaves gratuitas:**
+- **Groq**: [console.groq.com](https://console.groq.com/)
+- **Hugging Face**: [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
 
 ### 4. **Executar a Aplicação**
 ```bash
@@ -109,7 +124,48 @@ O arquivo `.env` gerado já inclui **templates comentados** para ativação ráp
 - **Google Gemini** (Gemini Pro, Vision)
 - **Cohere** (Command, Command-Light)
 - **Azure OpenAI** (configuração completa)
-- **Hugging Face** (modelos open-source)
+
+## Arquitetura do Sistema
+
+### **Componentes Principais**
+
+#### **1. Provider Registry (`src/provider_registry.py`)**
+- **Registro automático** de novos provedores
+- **Seleção inteligente** do melhor provider disponível  
+- **Switching dinâmico** entre providers
+- **Fallback** em caso de indisponibilidade
+
+#### **2. Configurações Globais (`src/config.py`)**
+- **Centralizadas** - parâmetros aplicados a todos os providers
+- **Environment-based** - configuração via `.env`
+- **Override support** - permite customização por provider
+- **Debug mode** e logging configurável
+
+#### **3. Componentes UI (`src/ui/components.py`)**
+- **Single Responsibility** - cada componente tem uma função específica
+- **Reutilizáveis** - componentes modulares e focados
+- **Factory Pattern** - criação especializada de conjuntos de componentes
+- **Separação clara** entre input, display, validation e settings
+
+#### **4. Interfaces Abstratas (`src/interfaces.py`)**
+- **Contratos claros** entre componentes
+- **Implementação obrigatória** de métodos essenciais
+- **Type safety** com typing hints
+- **Documentação integrada**
+
+### **Providers Implementados**
+
+#### **Groq Provider (`src/providers/groq_provider.py`)**
+- **Ultra-rápido** - API otimizada para velocidade
+- **Gratuito** - 30 requests/minuto sem custo
+- **Modelos**: Llama 3 70B, Llama 3 8B
+- **Configurações globais** aplicadas automaticamente
+
+#### **Hugging Face Provider (`src/providers/huggingface_provider.py`)**
+- **91+ modelos** disponíveis via API unificada
+- **OpenAI-compatible** - formato de requisição padronizado
+- **Modelos testados**: Gemma 2, DeepSeek R1, Phi-4, Qwen2.5-Coder
+- **Rate limits generosos** - 1,000+ requests/dia gratuito
 
 ## Como Adicionar um Novo Provedor
 
@@ -127,25 +183,32 @@ O arquivo `.env` gerado já inclui **templates comentados** para ativação ráp
    - Salve o arquivo
 
 3. **Implemente o provider (se não existir):**
-   - Copie um template de `src/providers/` ou use um já existente
-   - Customize para sua API ou descomente caso o provider seja um dos templates já existentes
+   - Copie um template de `src/providers/` 
+   - Customize para sua API
    - Adicione ao `__init__.py`
 
 ### **Método Detalhado: Implementação Customizada**
 
 ### 1. **Criar o Arquivo do Provedor**
 
-Use os templates em `src/providers/` como base:
+Use os providers existentes como base:
+- `groq_provider.py` - Implementação com LangChain
+- `huggingface_provider.py` - Implementação com requests
+
+Ou use os templates como base:
 - `openai_provider_example.py` - Template OpenAI
 - `claude_provider_example.py` - Template Claude
 
 ```python
 from src.interfaces import ILLMProvider
+from src.config import GlobalConfig
 
 class MeuProvedor(ILLMProvider):
     def __init__(self):
         self.name = "meu_provider"
-        # ... inicialização
+        # Usa configurações globais centralizadas
+        self.params = GlobalConfig.get_generation_params()
+        self._setup()
     
     # Implementar todos os métodos abstratos da interface
 ```
@@ -161,7 +224,7 @@ def get_name(self) -> str:
 def is_available(self) -> bool:
     """Verifica se está configurado e disponível"""
     
-def generate_response(self, message: str) -> str:
+def generate_response(self, message: str, **kwargs) -> str:
     """Gera resposta usando a API"""
     
 def get_info(self) -> Dict[str, Any]:
@@ -182,26 +245,19 @@ def get_performance_stats(self) -> Dict[str, Any]:
 
 ### 3. **Atualizar Exportações**
 
-Edite `__init__.py` para exportar o novo provedor:
+Edite `src/providers/__init__.py` para exportar o novo provedor:
 
 ```python
 from .groq_provider import GroqProvider
+from .huggingface_provider import HuggingFaceProvider
 from .meu_provider import MeuProvedor  # Adicione esta linha
 
-__all__ = ['GroqProvider', 'MeuProvedor']  # Adicione ao __all__
+__all__ = ['GroqProvider', 'HuggingFaceProvider', 'MeuProvedor']  # Adicione ao __all__
 ```
 
 ### 4. **Registro Automático**
 
-O sistema registra automaticamente novos provedores. Para registro manual:
-
-```python
-from src.providers import MeuProvedor
-from src.provider_registry import provider_registry
-
-# Registro manual (opcional)
-provider_registry.register_provider(MeuProvedor())
-```
+O sistema registra automaticamente novos provedores através do `ProviderRegistry`. O registro acontece automaticamente no `__init__()` do registry.
 
 ### 5. **Configuração de Environment**
 
@@ -211,155 +267,92 @@ Adicione variáveis necessárias no `.env`:
 MEU_PROVIDER_API_KEY=sua_chave_aqui
 MEU_PROVIDER_DEFAULT_MODEL=modelo_padrao
 ```
-Ou use o arquivo `setup_env.py`
 
-### 6. **Mapeamentos de UI (Opcional)**
+### 6. **Usar Configurações Globais**
 
-Para nomes amigáveis na interface, edite `app.py`:
+Aproveite as configurações centralizadas:
 
 ```python
-# Em show_sidebar()
-provider_names = {
-    "groq": "🚀 Groq",
-    "meu_provider": "🔥 Meu Provider"  # Adicione esta linha
-}
+from src.config import GlobalConfig
 
-# Em model selector
-model_names = {
-    "llama3-70b-8192": "🦙 Llama 3 70B",
-    "meu_modelo": "🤖 Meu Modelo"  # Adicione modelos
-}
+# Em __init__ ou _setup
+params = GlobalConfig.get_generation_params()
+self.temperature = params["temperature"]
+self.max_tokens = params["max_tokens"]
+
+# Com overrides específicos se necessário
+params = GlobalConfig.get_generation_params(temperature=0.9)
 ```
-
-## Templates Disponíveis
-
-O projeto inclui templates prontos em `src/providers/` para facilitar a implementação:
-
-### **OpenAI Template** (`openai_provider_example.py`)
-- Estrutura completa para OpenAI API
-- Configuração via variáveis de ambiente
-- Documentação inline detalhada
-- Implementação mock para testes
-- Suporte para GPT-3.5, GPT-4, GPT-4o
-
-### **Claude Template** (`claude_provider_example.py`)  
-- Integração com Anthropic Claude API
-- Suporte para modelos Haiku, Sonnet, Opus
-- Configurações otimizadas para cada modelo
-- Estrutura seguindo padrões do projeto
-
-### **Templates de Configuração**
-- **setup_env.py** - Templates automáticos no `.env`
-- **Documentação inline** - Instruções em cada template
-
-### **Como Usar os Templates:**
-
-1. **Copie um template:**
-   ```bash
-   cp src/providers/openai_provider_example.py src/providers/meu_provider.py
-   ```
-
-2. **Customize para sua API:**
-   - Substitua "OpenAI" pelo nome do seu provider
-   - Ajuste URLs e parâmetros da API
-   - Configure variáveis de ambiente
-
-3. **Ative no sistema:**
-   ```python
-   # src/providers/__init__.py
-   from .meu_provider import MeuProvider
-   __all__ = ['GroqProvider', 'MeuProvider']
-   ```
 
 ## **Configuração Avançada**
 
-### **Setup Automático Inteligente**
+### **Configurações Globais Centralizadas**
 
-O `setup_env.py` também possui:
+O sistema usa configurações centralizadas através da classe `GlobalConfig`:
 
-#### **Configurações Globais:**
 ```env
-# Gerado automaticamente pelo setup
-API_TIMEOUT=30           # Timeout para todas as APIs
-AUTO_RETRY=true          # Retry automático em falhas
-MAX_RETRIES=3            # Máximo de tentativas
-LOG_LEVEL=INFO           # Nível de log (DEBUG/INFO/WARNING/ERROR)
-DEBUG_MODE=false         # Modo debug para desenvolvimento
-ENABLE_MOCK_PROVIDER=false  # Provider mock para testes
+# Parâmetros de geração (aplicados a todos os providers)
+GLOBAL_TEMPERATURE=0.7       # Criatividade (0.0-1.0)  
+GLOBAL_MAX_TOKENS=1000       # Tamanho máximo das respostas
+
+# Configurações de API
+API_TIMEOUT=30               # Timeout para todas as APIs
+AUTO_RETRY=true              # Retry automático em falhas
+MAX_RETRIES=3                # Máximo de tentativas
+
+# Configurações de desenvolvimento
+LOG_LEVEL=INFO               # DEBUG, INFO, WARNING, ERROR
+DEBUG_MODE=false             # Modo debug para desenvolvimento
 ```
 
-#### **Atualização Segura:**
-- **Backup automático** do `.env` existente
-- **Validação** de chaves de API
-- **Teste automático** da configuração
-- **Próximos passos** claros após setup
+### **Setup Automático Inteligente**
+
+O `setup_env.py` inclui:
+
+#### **Funcionalidades Avançadas:**
+- **Validação automática** de chaves API (formato correto)
+- **Backup automático** do `.env` existente antes de sobrescrever
+- **Teste de configuração** pós-setup
+- **Templates inline** com documentação completa
+- **Próximos passos** claros após configuração
+
+#### **Modo Interativo:**
+- **Configurações avançadas** opcionais (temperatura, max_tokens, modelo)
+- **Instruções contextuais** para obter cada tipo de chave
+- **Validação em tempo real** com feedback claro
 
 ## Checklist para a Implementação
 
-- Arquivo do provedor criado
-- Todos os métodos da interface implementados
-- Tratamento de erros robusto
-- Configuração via variáveis de ambiente
-- Exportação no `__init__.py`
-- Testes básicos funcionando
-- Documentação das configurações necessárias
-- Mapeamentos de UI (se necessário)
-
-## Provedores Implementáveis
-
-### **Principais APIs LLM:**
-- **OpenAI**: GPT-3.5, GPT-4, GPT-4 Turbo, GPT-4o
-- **Anthropic**: Claude 3 (Haiku, Sonnet, Opus)
-- **Google**: Gemini Pro, Gemini Pro Vision
-- **Cohere**: Command, Command-Light
-- **Azure OpenAI**: GPT via Azure Cloud
-- **AWS Bedrock**: Múltiplos modelos via AWS
-- **Hugging Face**: Modelos open-source via API
-- **Ollama**: Modelos locais
-- **Together AI**: Modelos open-source hospedados 
+- [ ] Arquivo do provedor criado seguindo a interface `ILLMProvider`
+- [ ] Todos os métodos da interface implementados
+- [ ] Uso das configurações globais via `GlobalConfig`
+- [ ] Tratamento de erros robusto
+- [ ] Configuração via variáveis de ambiente
+- [ ] Exportação no `src/providers/__init__.py`
+- [ ] Testes básicos funcionando
+- [ ] Documentação das configurações necessárias
+- [ ] Performance stats implementadas
+- [ ] Atualização dos componentes da interface web
 
 ---
-
-## **Para Começar Rapidamente**
-
-1. **Setup básico:**
-   ```bash
-   git clone <ChatBot-Simples>
-   cd ChatBot
-   pip install -r requirements.txt
-   python setup_env.py
-   streamlit run app.py
-   ```
-
-2. **Adicionar providers (30 segundos cada):**
-   - Edite o `.env` gerado
-   - Descomente a seção do provider desejado
-   - Configure sua API key
-   - Reinicie a aplicação
-
-3. **Implementar provider customizado:**
-   - Use templates em `src/providers/`
-   - Siga o guia de implementação
-   - Sistema detecta automaticamente
 
 ## **Recursos e Links Úteis**
 
 ### **APIs Gratuitas para Testar:**
 - **Groq** (gratuito): [console.groq.com](https://console.groq.com/)
-- **Hugging Face** (gratuito): [huggingface.co/inference-api](https://huggingface.co/inference-api)
+- **Hugging Face** (gratuito): [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
 - **Google AI** (trial): [ai.google.dev](https://ai.google.dev)
 
 ### **Documentação Técnica:**
-- **SOLID Principles**: Projeto segue todos os 5 princípios
+- **SOLID Principles**: Projeto implementa todos os 5 princípios
 - **Plugin Architecture**: Sistema extensível sem modificações
-- **Dependency Injection**: Arquitetura modular e testável
-- **Interface Segregation**: Interfaces específicas e focadas
+- **Dependency Injection**: Registry modular e testável
+- **Component Segregation**: UI components especializados
+- **Centralized Configuration**: GlobalConfig para configurações unificadas
 
 ### **Para Desenvolvimento:**
 - **Modo Debug**: Configure `DEBUG_MODE=true` no `.env`
-- **Provider Mock**: Configure `ENABLE_MOCK_PROVIDER=true`
 - **Logs Detalhados**: Configure `LOG_LEVEL=DEBUG`
+- **Configurações Customizadas**: Use overrides no `GlobalConfig`
 
 ---
-
-**Dica**: Comece sempre com uma implementação mock para testar a integração, depois implemente a lógica real da API. 
