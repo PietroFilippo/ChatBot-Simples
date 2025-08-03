@@ -6,6 +6,7 @@ langchain-groq>=0.1.0
 # APIs e requests
 requests>=2.31.0
 groq>=0.4.1
+huggingface>=0.10.0
 
 # Interface web
 streamlit>=1.29.0

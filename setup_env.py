@@ -4,6 +4,7 @@ Script de Configuração Multi-Provider LLM
 
 Este script configura automaticamente:
 - Groq API (principal - gratuito)
+- Hugging Face API
 - Templates prontos para OpenAI, Claude, Gemini, etc.
 - Configurações globais do sistema
 - Instruções para adicionar novos providers
@@ -18,15 +19,16 @@ from datetime import datetime
 def print_header():
     """Exibe cabeçalho do setup."""
     print("Script de Configuração Multi-Provider LLM")
-    print("=" * 50)
+    print("=" * 55)
     print("Configura Groq (gratuito)")
+    print("Configura Hugging Face (gratuito)")
     print("Prepara templates para outros providers")
     print("Inclui instruções de extensão")
-    print("=" * 50)
+    print("=" * 55)
 
 def print_section(title: str):
     """Exibe seção formatada."""
-    print(f"\n {title}")
+    print(f"\n🔹 {title}")
     print("-" * 40)
 
 def validate_groq_key(key: str) -> bool:
@@ -44,6 +46,25 @@ def validate_groq_key(key: str) -> bool:
     
     # Chaves Groq começam com 'gsk_' e têm cerca de 50+ caracteres
     if key.startswith('gsk_') and len(key) > 40:
+        return True
+    
+    return False
+
+def validate_hf_key(key: str) -> bool:
+    """
+    Valida se a chave Hugging Face tem formato correto
+    
+    Args:
+        key: Chave da API Hugging Face
+        
+    Returns:
+        True se for válida, False caso contrário
+    """
+    if not key:
+        return False
+    
+    # Chaves HF começam com 'hf_' e têm cerca de 30+ caracteres
+    if key.startswith('hf_') and len(key) > 30:
         return True
     
     return False
@@ -75,6 +96,42 @@ def get_groq_key() -> Optional[str]:
         else:
             print("Chave inválida. Deve começar com 'gsk_' e ter mais de 40 caracteres.")
             print("   Exemplo: gsk_abc123def456...")
+            
+            retry = input("   Tentar novamente? (s/n): ").strip().lower()
+            if retry in ['n', 'no', 'não']:
+                return None
+
+def get_huggingface_key() -> Optional[str]:
+    """
+    Obtém chave da API Hugging Face
+    
+    Returns:
+        Chave da API ou None se pulada
+    """
+    print_section("CONFIGURAÇÃO DA API HUGGING FACE")
+    
+    print()
+    print("Como obter a chave Hugging Face gratuita:")
+    print("   1. Acesse: https://huggingface.co/settings/tokens")
+    print("   2. Faça login/cadastro")
+    print("   3. Clique 'New token'")
+    print("   4. Selecione 'Read' permissions")
+    print("   5. Cole aqui a chave")
+    print()
+    
+    while True:
+        key = input("Cole sua chave Hugging Face (ou Enter para pular): ").strip()
+        
+        if not key:
+            print("Hugging Face pulado. Você pode configurar depois.")
+            return None
+        
+        if validate_hf_key(key):
+            print("Chave Hugging Face válida")
+            return key
+        else:
+            print("Chave inválida. Deve começar com 'hf_' e ter mais de 30 caracteres.")
+            print("   Exemplo: hf_abc123def456...")
             
             retry = input("   Tentar novamente? (s/n): ").strip().lower()
             if retry in ['n', 'no', 'não']:
@@ -135,45 +192,73 @@ def get_advanced_settings() -> dict:
     
     return settings
 
-def create_env_file(groq_key: Optional[str], settings: dict) -> bool:
+def create_env_file(groq_key: Optional[str], hf_key: Optional[str], settings: dict) -> bool:
     """
-    Cria o arquivo .env com as configurações e templates para futuros providers
+    Cria arquivo .env com as configurações
     
     Args:
         groq_key: Chave da API Groq
+        hf_key: Chave da API Hugging Face
         settings: Configurações avançadas
         
     Returns:
-        True se criado com sucesso
+        True se criado com sucesso, False caso contrário
     """
-    try:
-        env_content = f"""# ================================================================
-# CONFIGURAÇÃO MULTI-PROVIDER LLM
-# Gerado automaticamente em: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-# ================================================================
+    
+    env_content = f"""# ================================
+# CONFIGURAÇÃO AUTOMÁTICA LLM
+# ================================
+# Arquivo gerado em: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+# Para reconfigurar, execute: python setup_env.py
+#
+# IMPORTANTE: 
+# - Este arquivo já está no .gitignore
+# - Não compartilhe suas API keys
+# - Mantenha suas chaves seguras
 
 # ================================
 # GROQ API (ATIVO)
 # ================================
-# Documentação: https://console.groq.com/docs
-# Rate Limit: 30 requests/minuto (gratuito)
-# Modelos: llama3-70b-8192, llama3-8b-8192
+# Provider principal - gratuito e rápido
+# Rate Limit: Generoso para uso pessoal
+# Modelos: Llama 3
 """
-        
-        if groq_key:
-            env_content += f"GROQ_API_KEY={groq_key}\n"
-        else:
-            env_content += "# GROQ_API_KEY=gsk_sua_key_aqui\n"
-        
-        env_content += f"""
 
+    # Adiciona a configuração do Groq se a chave foi fornecida
+    if groq_key:
+        env_content += f"""
+GROQ_API_KEY={groq_key}
+"""
+    else:
+        env_content += """
+# GROQ_API_KEY=sua_chave_groq_aqui
+"""
+
+    # Adiciona a configuração do Hugging Face se a chave foi fornecida
+    if hf_key:
+        env_content += f"""
+# ================================
+# HUGGING FACE API (ATIVO)
+# ================================
+# Modelos open-source gratuitos
+# Rate Limit: 1,000 requests/dia (gratuito)
+# Documentação: https://huggingface.co/docs/api-inference/
+
+HUGGINGFACE_API_KEY={hf_key}
+HF_TOKEN={hf_key}
+HUGGINGFACE_DEFAULT_MODEL=google/flan-t5-large
+"""
+    else:
+        env_content += """
+# ================================
+"""
+    env_content += f"""
 # ================================
 # OPENAI API (TEMPLATE PRONTO)
 # ================================
 # Para ativar: descomente as linhas abaixo e configure sua chave
-# Documentação: https://platform.openai.com/docs
+# Documentação: https://platform.openai.com/docs/
 # Rate Limit: Varia conforme plano
-# Modelos: gpt-3.5-turbo, gpt-4, gpt-4-turbo, gpt-4o
 
 # OPENAI_API_KEY=sk-proj-sua_chave_openai_aqui
 # OPENAI_DEFAULT_MODEL=gpt-3.5-turbo
@@ -181,7 +266,7 @@ def create_env_file(groq_key: Optional[str], settings: dict) -> bool:
 # OPENAI_MAX_TOKENS=1000
 
 # ================================
-# ANTHROPIC CLAUDE API (TEMPLATE PRONTO)
+# ANTHROPIC CLAUDE (TEMPLATE PRONTO)
 # ================================
 # Para ativar: descomente as linhas abaixo e configure sua chave
 # Documentação: https://docs.anthropic.com/
@@ -194,7 +279,7 @@ def create_env_file(groq_key: Optional[str], settings: dict) -> bool:
 # CLAUDE_MAX_TOKENS=1000
 
 # ================================
-# GOOGLE GEMINI API (TEMPLATE PRONTO)
+# GOOGLE GEMINI (TEMPLATE PRONTO)
 # ================================
 # Para ativar: descomente as linhas abaixo e configure sua chave
 # Documentação: https://ai.google.dev/docs
@@ -231,17 +316,6 @@ def create_env_file(groq_key: Optional[str], settings: dict) -> bool:
 # AZURE_OPENAI_DEPLOYMENT=seu-deployment-name
 
 # ================================
-# HUGGING FACE API (TEMPLATE PRONTO)
-# ================================
-# Para ativar: descomente as linhas abaixo e configure sua chave
-# Documentação: https://huggingface.co/docs/api-inference/
-
-# HUGGINGFACE_API_KEY=hf_sua_chave_huggingface_aqui
-# HUGGINGFACE_DEFAULT_MODEL=microsoft/DialoGPT-medium
-# HUGGINGFACE_TEMPERATURE=0.7
-# HUGGINGFACE_MAX_TOKENS=1000
-
-# ================================
 # TEMPLATE PARA NOVOS PROVIDERS
 # ================================
 # Para adicionar um novo provider, copie o template abaixo:
@@ -255,16 +329,18 @@ def create_env_file(groq_key: Optional[str], settings: dict) -> bool:
 # E adicione ao: src/providers/__init__.py
 
 # ================================
-# CONFIGURAÇÕES GROQ (ATIVAS)
+# CONFIGURAÇÕES GROQ (ATIVAS) 
 # ================================
 DEFAULT_MODEL={settings['model']}
-CRIATIVIDADE={settings['temperature']}
-MAX_TOKENS={settings['max_tokens']}
 
 # ================================
 # CONFIGURAÇÕES GLOBAIS
 # ================================
 # Configurações que se aplicam a todos os providers
+
+# Parâmetros de geração (todos os providers)
+GLOBAL_TEMPERATURE={settings['temperature']}
+GLOBAL_MAX_TOKENS={settings['max_tokens']}
 
 # Timeout para APIs (segundos)
 API_TIMEOUT=30
@@ -298,43 +374,23 @@ ENABLE_RESPONSE_CACHE=false
 # 
 # IMPORTANTE: 
 # - Não commitar este arquivo no Git (já está no .gitignore)
-# - Mantenha suas API keys seguras
-# - Nunca compartilhe suas chaves publicamente
+# - Mantenha suas chaves API seguras
+# - Para obter ajuda: python setup_env.py --help
 
 # ================================
-# RECURSOS E DOCUMENTAÇÃO
+# DOCUMENTAÇÃO E LINKS ÚTEIS
 # ================================
-# Links úteis para cada provider:
-#
-# Groq (Ativo): https://console.groq.com/
-# OpenAI: https://platform.openai.com/
-# Anthropic: https://console.anthropic.com/
-# Google AI: https://ai.google.dev/
-# Cohere: https://dashboard.cohere.ai/
-# Azure OpenAI: https://azure.microsoft.com/services/cognitive-services/openai-service/
-# Hugging Face: https://huggingface.co/inference-api
-#
-# Para adicionar novos providers:
-# 1. Crie src/providers/nome_provider.py
-# 2. Implemente a interface ILLMProvider
-# 3. Adicione ao src/providers/__init__.py
-# 4. Configure as variáveis de ambiente acima
-# 5. Execute: streamlit run app.py
-
-# ================================
-# EXEMPLO DE CONFIGURAÇÃO RÁPIDA
-# ================================
-# Para ativar OpenAI rapidamente:
-# 1. Descomente a linha OPENAI_API_KEY acima
-# 2. Cole sua chave da OpenAI
-# 3. Salve este arquivo
-# 4. Execute: streamlit run app.py
-# 5. OpenAI aparecerá automaticamente na interface
+# GROQ Console: https://console.groq.com/
+# Hugging Face Tokens: https://huggingface.co/settings/tokens
+# OpenAI Platform: https://platform.openai.com/
+# Anthropic Console: https://console.anthropic.com/
+# Google AI Studio: https://ai.google.dev/
+# Azure OpenAI: https://azure.microsoft.com/pt-br/products/ai-services/openai-service
 """
-        
+    
+    try:
         with open('.env', 'w', encoding='utf-8') as f:
             f.write(env_content)
-        
         return True
         
     except Exception as e:
@@ -429,6 +485,7 @@ def main():
         
         # Coletar informações
         groq_key = get_groq_key()
+        hf_key = get_huggingface_key()
         
         # Configurações avançadas
         advanced = input("\nConfigurar opções avançadas? (s/n): ").strip().lower()
@@ -444,7 +501,7 @@ def main():
         # Criar arquivo .env
         print_section("CRIANDO ARQUIVO .ENV")
         
-        if create_env_file(groq_key, settings):
+        if create_env_file(groq_key, hf_key, settings):
             print("Arquivo .env criado com sucesso")
             
             # Testar configuração

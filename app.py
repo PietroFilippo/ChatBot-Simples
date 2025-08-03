@@ -18,6 +18,7 @@ from src.llm_providers import llm_manager, provider_registry
 from src.dependency_bootstrap import get_chatbot_with_di, get_llm_service, get_dependency_info
 from src.sentiment import sentiment_analyzer
 from src.summarizer import summarizer
+from src.config import GlobalConfig
 
 # Importar componentes UI especializados (Single Responsibility)
 from src.ui import ComponentFactory
@@ -228,77 +229,120 @@ def show_sidebar():
     # Seletor de Provedor LLM
     st.sidebar.subheader("🔗 Seletor de API")
     
-    # Obtem provedores disponíveis
+    # Obtem provedores disponíveis e todos os registrados
     available_providers_dict = provider_registry.get_available_providers()
-    available_providers = list(available_providers_dict.keys())  # Convert to list of names
+    available_providers = list(available_providers_dict.keys())
+    all_registered_providers = provider_registry.get_all_registered_providers()
     all_providers = provider_registry.get_all_providers_info()
     
-    if available_providers:
+    if all_registered_providers:
         # Criação do mapeamento
         provider_names = {
-            "groq": "🚀 Groq"
+            "groq": "🚀 Groq",
+            "huggingface": "🤗 Hugging Face"
         }
         
-        # Opções do selectbox
-        options = [provider_names.get(p, p.title()) for p in available_providers]
+        # Cria opções com indicação de status
+        options = []
+        option_to_provider = {}
+        
+        for provider_name, provider in all_registered_providers.items():
+            display_name = provider_names.get(provider_name, provider_name.title())
+            
+            if provider.is_available():
+                # Provedor disponível - pode ser selecionado
+                formatted_option = f"{display_name} ✅"
+                options.append(formatted_option)
+                option_to_provider[formatted_option] = provider_name
+            else:
+                # Provedor não disponível - mostrar mas não pode ser selecionado
+                formatted_option = f"{display_name} ⚙️ (Configure)"
+                options.append(formatted_option)
+                option_to_provider[formatted_option] = provider_name
+        
+        # Determina o índice atual
         current_provider = provider_registry.get_current_provider()
-        current_index = available_providers.index(current_provider.get_name()) if current_provider and current_provider.get_name() in available_providers else 0
+        current_index = 0
+        if current_provider:
+            current_name = current_provider.get_name()
+            current_display = provider_names.get(current_name, current_name.title())
+            current_option = f"{current_display} ✅"
+            try:
+                current_index = options.index(current_option)
+            except ValueError:
+                current_index = 0
         
         # Selectbox para escolher provedor
         selected_display = st.sidebar.selectbox(
             "Escolha a API:",
             options,
             index=current_index,
-            help="""Selecione o provedor de LLM. Atualmente apenas Groq está disponível.
-Para configurar outras APIs, baixe o repositório do projeto e siga as instruções."""
+            help="""Selecione o provedor de LLM.
+Para configurar outras APIs de maneira local com suas chaves, baixe o repositório do projeto e siga as instruções."""
         )
         
-        # Converte de volta para o nome interno
-        selected_provider = None
-        for internal_name, display_name in provider_names.items():
-            if display_name == selected_display:
-                selected_provider = internal_name
-                break
+        # Obter provedor selecionado
+        selected_provider = option_to_provider.get(selected_display)
         
-        # Troca o provedor se necessário
-        if selected_provider and selected_provider != current_provider.get_name():
-            if provider_registry.switch_provider(selected_provider):
-                st.sidebar.success(f"Mudou para: {selected_display}")
-                
-                # Preserva o histórico ao trocar o provedor
-                msg_count = preserve_chatbot_state()
-                if msg_count > 0:
-                    st.sidebar.info(f"📊 Histórico preservado: {msg_count} mensagens")
-                
-                st.rerun()
+        # Verificar se o provedor selecionado está disponível
+        if selected_provider and selected_provider in available_providers:
+            # Troca o provedor se necessário
+            if selected_provider != current_provider.get_name():
+                if provider_registry.switch_provider(selected_provider):
+                    st.sidebar.success(f"Mudou para: {provider_names.get(selected_provider, selected_provider.title())}")
+                    
+                    # Preserva o histórico ao trocar o provedor
+                    msg_count = preserve_chatbot_state()
+                    if msg_count > 0:
+                        st.sidebar.info(f"📊 Histórico preservado: {msg_count} mensagens")
+                    
+                    st.rerun()
+        elif selected_provider and selected_provider not in available_providers:
+            # Provedor selecionado mas não disponível - mostrar como configurar
+            provider_display = provider_names.get(selected_provider, selected_provider.title())
+            st.sidebar.warning(f"⚙️ {provider_display} precisa ser configurado")
+            
+            if selected_provider == "huggingface":
+                st.sidebar.info("""
+                **Para configurar Hugging Face:**
+                1. Execute: `python setup_env.py`
+                2. Configure sua chave quando solicitado
+                3. Obtenha grátis em: [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
+                """)
+            elif selected_provider == "groq":
+                st.sidebar.info("""
+                **Para configurar Groq:**
+                1. Execute: `python setup_env.py`
+                2. Configure sua chave quando solicitado
+                3. Obtenha grátis em: [console.groq.com](https://console.groq.com/)
+                """)
     else:
-        st.sidebar.error("❌ Nenhuma API configurada")
-        st.sidebar.warning("Configure pelo menos uma API para usar o sistema")
+        st.sidebar.error("❌ Nenhuma API registrada")
+        st.sidebar.warning("Erro interno: Nenhum provedor foi registrado no sistema")
     
-    # Status dos provedores
+    # Status dos provedores - agora mostra todos os registrados
     with st.sidebar.expander("📊 Status das APIs", expanded=False):
-        for name, info in all_providers.items():
-            provider = provider_registry.get_provider(name)
-            status_emoji = "✅" if provider.is_available() else "❌"
-            speed_info = f"({info['speed']}, {info['cost']})"
+        for name, provider in all_registered_providers.items():
+            status_emoji = "✅" if provider.is_available() else "⚙️"
+            provider_display = provider_names.get(name, name.title())
             
             if provider == current_provider:
-                st.success(f"{status_emoji} **{name.title()}** {speed_info} - ATIVO")
+                st.success(f"{status_emoji} **{provider_display}** - ATIVO")
             elif provider.is_available():
-                st.info(f"{status_emoji} {name.title()} {speed_info}")
+                st.info(f"{status_emoji} {provider_display} - Disponível")
             else:
-                st.error(f"{status_emoji} {name.title()} {speed_info} - Não configurado")
+                st.warning(f"{status_emoji} {provider_display} - Precisa configurar")
     
     # Informações detalhadas do provedor ativo
     current_provider = provider_registry.get_current_provider()
     if current_provider:
-        current_info = all_providers[current_provider.get_name()]
+        current_info = current_provider.get_info()
         
         # API Ativa
         with st.sidebar.expander("🎯 API Ativa"):
             st.markdown(f"- **Nome:** {current_provider.get_name().title()}")
-            st.markdown(f"- **Velocidade:** {current_info['speed'].title()}")
-            st.markdown(f"- **Custo:** {current_info['cost'].title()}")
+            st.markdown(f"- **Velocidade:** {current_info.get('speed', 'N/A').title()}")
+            st.markdown(f"- **Custo:** {current_info.get('cost', 'N/A').title()}")
         
         # Seletor de modelo
         with st.sidebar.expander("🤖 Seletor de Modelo", expanded=False):
@@ -308,8 +352,16 @@ Para configurar outras APIs, baixe o repositório do projeto e siga as instruç�
             if available_models:
                 # Cria o mapeamento para modelos
                 model_names = {
+                    # Groq models
                     "llama3-70b-8192": "🦙 Llama 3 70B",
-                    "llama3-8b-8192": "🦙 Llama 3 8B"
+                    "llama3-8b-8192": "🦙 Llama 3 8B",
+                    
+                    # Hugging Face models
+                    "google/gemma-2-2b-it": "🔷 Gemma 2 2B Instruct",
+                    "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": "🧠 DeepSeek R1 Distill 1.5B",
+                    "microsoft/phi-4": "🔷 Microsoft Phi-4",
+                    "Qwen/Qwen2.5-Coder-32B-Instruct": "💻 Qwen 2.5 Coder 32B",
+                    "deepseek-ai/DeepSeek-R1": "🧠 DeepSeek R1 (Reasoning)"
                 }
                 
                 # Opções para o selectbox
@@ -1134,6 +1186,53 @@ Groq: {groq_status}
         
         for component, status in components_status.items():
             st.markdown(f"- **{component}:** {status}")
+
+    # Configurações Globais
+    st.subheader("⚙️ Configurações Globais")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("**🎛️ Parâmetros de Geração:**")
+        debug_info = GlobalConfig.get_debug_info()
+        st.markdown(f"- **Temperature:** {debug_info['temperature']}")
+        st.markdown(f"- **Max Tokens:** {debug_info['max_tokens']}")
+        st.markdown(f"- **API Timeout:** {debug_info['api_timeout']}s")
+    
+    with col2:
+        st.markdown("**⚙️ Configurações de Sistema:**")
+        st.markdown(f"- **Auto Retry:** {'✅ Ativo' if debug_info['auto_retry'] else '❌ Inativo'}")
+        st.markdown(f"- **Max Retries:** {debug_info['max_retries']}")
+        st.markdown(f"- **Log Level:** {debug_info['log_level']}")
+        st.markdown(f"- **Debug Mode:** {'✅ Ativo' if debug_info['debug_mode'] else '❌ Inativo'}")
+    
+    # Mostra como alterar as configurações
+    with st.expander("🔧 Como Alterar Configurações Globais", expanded=False):
+        st.markdown("""
+        Para alterar as configurações globais:
+        
+        1. **Execute o setup:**
+        ```bash
+        python setup_env.py
+        ```
+        
+        2. **Ou edite o arquivo `.env` manualmente:**
+        ```bash
+        GLOBAL_TEMPERATURE=0.7      # Criatividade (0.0-1.0)
+        GLOBAL_MAX_TOKENS=1000      # Tamanho máximo das respostas
+        API_TIMEOUT=30              # Timeout em segundos
+        AUTO_RETRY=true             # Retry automático
+        MAX_RETRIES=3               # Número de tentativas
+        LOG_LEVEL=INFO              # DEBUG, INFO, WARNING, ERROR
+        DEBUG_MODE=false            # Modo debug
+        ```
+        
+        3. **Execute localmente:**
+        ```bash
+        streamlit run app.py
+        ```
+        **Ou reinicie a aplicação** caso já esteja rodando para aplicar as mudanças.
+        """)
 
 def main():
     """Função principal da aplicação."""

@@ -5,7 +5,7 @@ Aberto para extensão, fechado para modificação.
 
 from typing import Dict, List, Any, Optional
 from src.interfaces import ILLMProvider, IProviderRegistry
-from src.providers import GroqProvider
+from src.providers import GroqProvider, HuggingFaceProvider
 
 
 class ProviderRegistry(IProviderRegistry):
@@ -31,6 +31,10 @@ class ProviderRegistry(IProviderRegistry):
             # Registra Groq
             groq_provider = GroqProvider()
             self.register_provider(groq_provider)
+            
+            # Registra Hugging Face
+            hf_provider = HuggingFaceProvider()
+            self.register_provider(hf_provider)
             
         except Exception as e:
             print(f"Erro no auto-registro: {e}")
@@ -107,6 +111,15 @@ class ProviderRegistry(IProviderRegistry):
             name: provider for name, provider in self._providers.items()
             if provider.is_available()
         }
+    
+    def get_all_registered_providers(self) -> Dict[str, ILLMProvider]:
+        """
+        Retorna todos os provedores registrados (disponíveis ou não).
+        
+        Returns:
+            Dicionário com todos os provedores registrados
+        """
+        return self._providers.copy()
     
     def get_current_provider(self) -> Optional[ILLMProvider]:
         """

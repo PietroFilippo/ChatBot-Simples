@@ -19,6 +19,7 @@ class ChatMessageRenderer:
     def __init__(self):
         self.provider_icons = {
             "groq": "🚀",
+            "huggingface": "🤗",
             "unknown": "❓"
         }
     
@@ -55,7 +56,7 @@ class MetricsDisplayer:
             st.info(f"🎭 Personalidade atual: **{personality.title()}**")
         
         with col2:
-            icon = "🚀" if provider_name == "groq" else "❓"
+            icon = "🚀" if provider_name == "groq" else "🤗" if provider_name == "huggingface" else "❓"
             st.success(f"{icon} **{provider_name.title()}**")
         
         with col3:
@@ -227,7 +228,10 @@ class SettingsPanel:
             st.error("❌ Nenhuma API configurada")
             return None
         
-        provider_names = {"groq": "🚀 Groq"}
+        provider_names = {
+            "groq": "🚀 Groq",
+            "huggingface": "🤗 Hugging Face"
+        }
         options = [provider_names.get(p, p.title()) for p in available_providers]
         
         try:
