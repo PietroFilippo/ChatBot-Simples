@@ -125,6 +125,8 @@ O arquivo `.env` gerado já inclui **templates comentados** para ativação ráp
 - **Cohere** (Command, Command-Light)
 - **Azure OpenAI** (configuração completa)
 
+Templates atualizados incluem configurações globais, estatísticas de performance, etc.
+
 ## Arquitetura do Sistema
 
 ### **Componentes Principais**
@@ -196,8 +198,16 @@ Use os providers existentes como base:
 - `huggingface_provider.py` - Implementação com requests
 
 Ou use os templates como base:
-- `openai_provider_example.py` - Template OpenAI
-- `claude_provider_example.py` - Template Claude
+- `template_provider.py` - **Template genérico completo**
+- `openai_provider_example.py` - Template OpenAI atualizado
+- `claude_provider_example.py` - Template Claude atualizado
+
+**Recursos dos templates:**
+- **Configurações globais centralizadas** via `GlobalConfig`
+- **Estatísticas de performance** integradas
+- **Execução direta** para teste (ex: `python src/providers/template_provider.py`)
+- **Documentação inline** completa com exemplos
+- **Tratamento de erros** robusto
 
 ```python
 from src.interfaces import ILLMProvider
@@ -333,6 +343,8 @@ O `setup_env.py` inclui:
 - [ ] Documentação das configurações necessárias
 - [ ] Performance stats implementadas
 - [ ] Atualização dos componentes da interface web
+
+Use o template genérico `src/providers/template_provider.py` como base.
 
 ---
 
