@@ -405,9 +405,22 @@ Para configurar outras APIs de maneira local com suas chaves, baixe o repositór
                 
                 # Características dos modelos
                 model_info = {
+                    # Groq models
                     "llama3-70b-8192": {"size": "70B", "speed": "Médio", "quality": "Excelente", "context": "8K"},
-                    "llama3-8b-8192": {"size": "8B", "speed": "Rápido", "quality": "Bom", "context": "8K"}
- 
+                    "llama3-8b-8192": {"size": "8B", "speed": "Rápido", "quality": "Bom", "context": "8K"},
+                    
+                    # Hugging Face models
+                    "google/gemma-2-2b-it": {"size": "2B", "speed": "Muito Rápido", "quality": "Bom", "context": "8K"},
+                    "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": {"size": "1.5B", "speed": "Rápido", "quality": "Bom", "context": "32K"},
+                    "microsoft/phi-4": {"size": "14B", "speed": "Médio", "quality": "Muito Bom", "context": "16K"},
+                    "Qwen/Qwen2.5-Coder-32B-Instruct": {"size": "32B", "speed": "Lento", "quality": "Excelente", "context": "32K"},
+                    "deepseek-ai/DeepSeek-R1": {
+                        "size": "671B", 
+                        "speed": "Lento", 
+                        "quality": "Excepcional", 
+                        "context": "128K",
+                        "special": "🧠 Modelo de Reasoning - Demora mais para responder pois 'pensa' antes de dar a resposta final. O output inclui o processo de raciocínio completo."
+                    }
                 }
                 
                 if current_model in model_info:
@@ -416,6 +429,10 @@ Para configurar outras APIs de maneira local com suas chaves, baixe o repositór
                     st.markdown(f"- **Velocidade:** {info['speed']}")
                     st.markdown(f"- **Qualidade:** {info['quality']}")
                     st.markdown(f"- **Contexto:** {info['context']} tokens")
+                    
+                    # Mostra informações especiais se existirem
+                    if "special" in info:
+                        st.markdown(f"- **Características:** {info['special']}")
             else:
                 st.warning("Nenhum modelo disponível")
     
@@ -486,6 +503,7 @@ Para configurar outras APIs de maneira local com suas chaves, baixe o repositór
         st.markdown(f"""
         - LangChain
         - Groq API (gratuita)
+        - Hugging Face API (gratuita)
         - Análise de Sentimentos (LLM)
         - Geração de Resumos
         - Chatbot
