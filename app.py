@@ -395,6 +395,9 @@ Para configurar outras APIs de maneira local com suas chaves, baixe o repositór
                         
                         # Preserva o histórico ao trocar o modelo
                         msg_count = preserve_chatbot_state()
+                        
+                        # Força atualização imediata da interface
+                        st.rerun()
                 
                 # Informações do modelo atual
                 st.markdown("**📋 Modelo Atual:**")
