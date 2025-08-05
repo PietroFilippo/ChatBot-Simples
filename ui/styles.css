@@ -1,0 +1,149 @@
+/* Sistema de IA Generativa - Estilos CSS */
+
+.main-header {
+    font-size: 2.5rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 2rem;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.feature-card {
+    background: var(--background-color);
+    border: 1px solid var(--secondary-background-color);
+    padding: 1.5rem;
+    border-radius: 10px;
+    border-left: 4px solid #667eea;
+    margin: 1rem 0;
+    color: var(--text-color);
+}
+
+.feature-card h4 {
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.feature-card p {
+    color: var(--text-color);
+    margin: 0;
+}
+
+.metric-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.success-box {
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    border-radius: 5px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.warning-box {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 5px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+/* Compatibilidade com tema escuro */
+@media (prefers-color-scheme: dark) {
+    .feature-card {
+        background: #262730;
+        border-color: #464853;
+        color: #fafafa;
+    }
+    
+    .feature-card h4,
+    .feature-card p {
+        color: #fafafa;
+    }
+}
+
+/* Força o tema escuro pro Streamlit */
+.stApp {
+    --background-color: #0e1117;
+    --secondary-background-color: #262730;
+    --text-color: #fafafa;
+}
+
+.feature-card {
+    background: #262730 !important;
+    border-color: #464853 !important;
+    color: #fafafa !important;
+}
+
+.feature-card h4,
+.feature-card p {
+    color: #fafafa !important;
+}
+
+/* Estilos personalizados para st.chat_message */
+.stChatMessage {
+    padding: 1rem !important;
+    margin: 0.5rem 0 !important;
+    border-radius: 10px !important;
+}
+
+/* Mensagens do usuário */
+.stChatMessage[data-testid="user"] {
+    background: #2d3748 !important;
+    border-left: 4px solid #4299e1 !important;
+}
+
+/* Mensagens do assistente */
+.stChatMessage[data-testid="assistant"] {
+    background: #4a5568 !important;
+    border-left: 4px solid #9f7aea !important;
+}
+
+/* Reduzir padding excessivo das mensagens */
+.stChatMessage > div {
+    padding: 0.5rem !important;
+}
+
+/* Estilo dos avatares */
+.stChatMessage .stChatMessageAvatarContainer {
+    min-width: 40px !important;
+    width: 40px !important;
+    height: 40px !important;
+    margin-right: 1rem !important;
+}
+
+/* Conteúdo das mensagens */
+.stChatMessage .stChatMessageContent {
+    max-width: 100% !important;
+}
+
+/* Container do chat */
+.stChatMessage {
+    scroll-margin-bottom: 100px;
+}
+
+/* Estilos para botões do chatbot */
+.stColumns > div {
+    padding: 0 0.25rem !important;
+}
+
+.stButton > button {
+    width: 100%;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+.stButton > button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+} 
