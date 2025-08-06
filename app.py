@@ -931,13 +931,15 @@ def analytics_tab():
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            st.metric("Mensagens do Chat", chatbot_stats.get("messages", 0))
+            # Mostra total de interações se disponível
+            interactions = chatbot_stats.get("total_interactions", chatbot_stats.get("messages", 0))
+            st.metric("Mensagens do Chat", interactions)
         with col2:
             st.metric("Tamanho Médio (User)", f"{chatbot_stats.get('avg_user_length', 0):.0f}")
         with col3:
             st.metric("Tamanho Médio (Bot)", f"{chatbot_stats.get('avg_bot_length', 0):.0f}")
         with col4:
-            st.metric("Personalidade", chatbot_stats.get("personality", "N/A").title())
+            st.metric("Personalidade", chatbot_stats.get("personality", "N/A").title())      
     
     # Modelos disponíveis do provedor atual
     if current_provider and current_provider.is_available():
@@ -977,7 +979,7 @@ Groq: {groq_status}
             "Groq API": "✅ Ativo" if groq_available else "❌ Inativo",
             "Análise Sentimentos": "✅ Ativo" if sentiment_analyzer.get_available_methods().get("llm", {}).get("available") else "❌ Inativo",
             "Resumos": "✅ Ativo" if summarizer.get_available_methods().get("langchain", {}).get("available") else "❌ Inativo",
-            "Chatbot": "✅ Ativo" if provider_registry.is_any_provider_available() else "❌ Inativo"
+            "Chatbot": "✅ Ativo" if provider_registry.is_any_provider_available() else "❌ Inativo",
         }
         
         for component, status in components_status.items():

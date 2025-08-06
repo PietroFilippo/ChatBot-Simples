@@ -1,22 +1,30 @@
-# Core IA e LLM
-langchain>=0.1.0
-langchain-community>=0.0.10
-langchain-groq>=0.1.0
-
-# APIs e requests
-requests>=2.31.0
-groq>=0.4.1
-
-# Interface web
-streamlit>=1.29.0
-
-# Processamento de dados
-pandas>=2.1.0
-numpy>=1.24.3
-
-# Utilidades
+# Dependências principais
+streamlit>=1.28.0
 python-dotenv>=1.0.0
-pydantic>=2.5.0
+
+# LLM e IA
+langchain>=0.1.0
+langchain-groq>=0.1.0
+langchain-community>=0.0.20
+
+# APIs externas
+requests>=2.31.0
+groq>=0.4.0
 
 # Análise de texto
-nltk>=3.8.1 
+textblob>=0.17.1
+nltk>=3.8.1
+
+# Processamento de dados
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Visualização
+plotly>=5.17.0
+matplotlib>=3.7.0
+
+# Utilitários
+Pillow>=10.0.0
+
+# Para contagem precisa de tokens
+tiktoken>=0.5.0 

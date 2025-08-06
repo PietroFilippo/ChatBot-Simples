@@ -26,7 +26,8 @@ class GroqProvider(BaseProvider):
             name="groq",
             available_models=[
                 "llama3-70b-8192",
-                "llama3-8b-8192"
+                "llama3-8b-8192",
+                "gemma2-9b-it"    
             ]
         )
         # Não resetar self.llm aqui - ele já foi configurado no _setup()!

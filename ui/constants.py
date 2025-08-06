@@ -80,6 +80,7 @@ MODEL_NAMES = {
     # Groq models
     "llama3-70b-8192": "🦙 Llama 3 70B",
     "llama3-8b-8192": "🦙 Llama 3 8B",
+    "gemma2-9b-it": "🔷 Gemma 2 9B",
     
     # Hugging Face models
     "google/gemma-2-2b-it": "🔷 Gemma 2 2B Instruct",
@@ -101,16 +102,17 @@ SYSTEM_INFO = {
     """,
     "MODEL_INFO": {
         # Groq models
-        "llama3-70b-8192": {"size": "70B", "speed": "Médio", "quality": "Excelente", "context": "8K"},
+        "llama3-70b-8192": {"size": "70B", "speed": "Rápido", "quality": "Excelente", "context": "8K"},
         "llama3-8b-8192": {"size": "8B", "speed": "Rápido", "quality": "Bom", "context": "8K"},
+        "gemma2-9b-it": {"size": "9B", "speed": "Rápido", "quality": "Bom", "context": "8K"},
         
         # Hugging Face models
-        "google/gemma-2-2b-it": {"size": "2B", "speed": "Muito Rápido", "quality": "Bom", "context": "8K"},
+        "google/gemma-2-2b-it": {"size": "2B", "speed": "Rápido", "quality": "Bom", "context": "8K"},
         "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": {"size": "1.5B", "speed": "Rápido", "quality": "Bom", "context": "32K"},
-        "microsoft/phi-4": {"size": "14B", "speed": "Médio", "quality": "Muito Bom", "context": "16K"},
-        "Qwen/Qwen2.5-Coder-32B-Instruct": {"size": "32B", "speed": "Lento", "quality": "Excelente", "context": "32K"},
+        "microsoft/phi-4": {"size": "14B", "speed": "Rápido", "quality": "Muito Bom", "context": "16K"},
+        "Qwen/Qwen2.5-Coder-32B-Instruct": {"size": "32B", "speed": "Médio", "quality": "Excelente", "context": "32K"},
         "deepseek-ai/DeepSeek-R1": {
-            "size": "671B", 
+            "size": "236B", 
             "speed": "Lento", 
             "quality": "Excepcional", 
             "context": "128K",

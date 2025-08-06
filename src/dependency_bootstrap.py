@@ -10,7 +10,7 @@ from src.interfaces import (
 )
 from src.services.llm_service import LLMService
 from src.provider_registry import provider_registry
-from src.chatbot import IntelligentChatbot
+from src.intelligent_chatbot import IntelligentChatbotV2
 
 
 def configure_dependencies():
@@ -30,10 +30,10 @@ def configure_dependencies():
     
     container.register_singleton_factory(ILLMService, llm_service_factory)
     
-    # 3. Registra Chatbot Service como factory (transient)
-    def chatbot_factory(personality: str = "helpful", memory_size: int = 10):
+    # 3. Registra Chatbot Service como factory (transient) - VERSÃO INTELIGENTE
+    def chatbot_factory(personality: str = "helpful"):
         llm_service = container.resolve(ILLMService)
-        return IntelligentChatbot(llm_service, personality, memory_size)
+        return IntelligentChatbotV2(llm_service, personality)
     
     container.register_transient(IChatbotService, lambda: chatbot_factory())
     
@@ -46,13 +46,16 @@ def get_chatbot_with_di(personality: str = "helpful", memory_size: int = 10) -> 
     
     Args:
         personality: Personalidade do chatbot
-        memory_size: Tamanho da memória
+        memory_size: O sistema inteligente gerencia automaticamente
         
     Returns:
         Instância do chatbot com dependências injetadas
     """
+    if memory_size != 10:
+        print(f"memory_size={memory_size} ignorado - Sistema gerencia automaticamente")
+    
     llm_service = container.resolve(ILLMService)
-    return IntelligentChatbot(llm_service, personality, memory_size)
+    return IntelligentChatbotV2(llm_service, personality)
 
 
 def get_llm_service() -> ILLMService:
@@ -86,7 +89,9 @@ def get_dependency_info() -> dict:
         "registered_interfaces": container.get_registered_interfaces(),
         "provider_registry_available": container.is_registered(IProviderRegistry),
         "llm_service_available": container.is_registered(ILLMService),
-        "chatbot_service_available": container.is_registered(IChatbotService)
+        "chatbot_service_available": container.is_registered(IChatbotService),
+        "chatbot_type": "IntelligentChatbotV2",
+        "intelligent_context_enabled": True
     }
 
 
