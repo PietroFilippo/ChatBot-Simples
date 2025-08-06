@@ -472,47 +472,77 @@ def chatbot_tab():
             len(st.session_state.chat_history)
         )
         
-        # CSS personalizado para os botões do chatbot - SEGURO
+        # CSS personalizado para os botões do chatbot - COMPATÍVEL COM STREAMLIT CLOUD
         st.markdown("""
         <style>
-        /* Reduzir espaçamento entre colunas */
+        .stButton > button {
+            width: 100% !important;
+            border-radius: 8px !important;
+            font-weight: 500 !important;
+            transition: all 0.2s ease !important;
+            border: 1px solid transparent !important;
+            padding: 0.5rem 1rem !important;
+            font-size: 0.875rem !important;
+            height: 2.5rem !important;
+            min-height: 2.5rem !important;
+            box-sizing: border-box !important;
+        }
+        
+        /* Remove espaçamento extra das colunas */
         .stColumns > div {
             padding: 0 0.25rem !important;
         }
         
-        /* Estilo geral para botões do chatbot */
-        .stButton > button {
-            width: 100%;
-            border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            border: 1px solid transparent;
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
+        /* Efeito hover compatível */
+        .stButton > button:hover {
+            transform: translateY(-1px) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
         }
         
-        /* Efeito hover para todos os botões */
-        .stButton > button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        /* Força altura consistente */
+        .stButton {
+            height: 2.5rem !important;
         }
         </style>
         """, unsafe_allow_html=True)
         
-        # Renderiza botões de ação com espaçamento reduzido
-        col1, col2, col3 = st.columns([1.2, 1.5, 1])
+        # Layout de botões simplificado e compatível
+        col1, col2 = st.columns([1, 1])
         
         with col1:
-            clear_btn = st.button("🧹 Limpar", key=f"clear_btn_{len(st.session_state.chat_history)}", type="secondary")
+            clear_btn = st.button("🧹 Limpar Chat", key=f"clear_btn_{len(st.session_state.chat_history)}", type="secondary")
         
         with col2:
-            # Botão "Voltar ao Topo" usando componente nativo mais seguro
-            if st.button("⬆️ Voltar ao Topo", key="back_to_top", type="primary"):
-                st.rerun()
-        
-        with col3:
-            # Espaço vazio para equilibrar o layout
-            st.empty()
+            # Botão "Voltar ao Topo" usando HTML com âncora
+            st.markdown("""
+            <a href="#page-top" style="
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0.5rem 1rem;
+                background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                text-decoration: none;
+                border-radius: 8px;
+                text-align: center;
+                font-weight: 500;
+                font-size: 0.875rem;
+                line-height: 1.6;
+                height: 2.5rem;
+                min-height: 2.5rem;
+                box-sizing: border-box;
+                cursor: pointer;
+                border: 1px solid transparent;
+                transition: all 0.2s ease;
+                margin: 0;
+                white-space: nowrap;
+                width: 100%;
+            " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'" 
+               onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='none'"
+               onmousedown="this.style.transform='translateY(0px)'">
+                ⬆️ Voltar ao Topo
+            </a>
+            """, unsafe_allow_html=True)
         
         # Processa ações dos botões
         if clear_btn:

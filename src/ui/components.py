@@ -184,8 +184,8 @@ class ButtonController:
         return buttons
     
     def _render_back_to_top_button(self) -> None:
-        """Renderiza botão de voltar ao topo."""
-        st.html("""
+        """Renderiza botão de voltar ao topo usando HTML com âncora"""
+        st.markdown("""
         <a href="#page-top" style="
             display: inline-flex;
             align-items: center;
@@ -212,7 +212,7 @@ class ButtonController:
            onmousedown="this.style.transform='translateY(0px)'">
             ⬆️ Voltar ao Topo
         </a>
-        """)
+        """, unsafe_allow_html=True)
 
 
 # ========================================
