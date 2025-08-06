@@ -171,7 +171,7 @@ class ButtonController:
         buttons = {}
         
         with col1:
-            buttons["clear"] = st.button("🧹 Limpar", key=f"clear_btn_{message_count}")
+            buttons["clear"] = st.button("🧹 Limpar", type="primary", key=f"clear_btn_{message_count}")
         
         with col2:
             self._render_back_to_top_button()
@@ -179,35 +179,33 @@ class ButtonController:
         return buttons
     
     def _render_back_to_top_button(self) -> None:
-        """Renderiza botão de voltar ao topo otimizado para compatibilidade"""
+        """Renderiza botão de voltar ao topo com estilo idêntico aos botões Streamlit"""
         st.markdown("""
-        <a href="#page-top" style="
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0.5rem 1rem;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            text-decoration: none;
-            border-radius: 0.5rem;
-            text-align: center;
-            font-weight: 500;
-            font-size: 0.875rem;
-            line-height: 1.6;
-            height: 2.5rem;
-            min-height: 2.5rem;
-            box-sizing: border-box;
-            cursor: pointer;
-            border: 1px solid transparent;
-            transition: all 0.2s ease;
-            margin: 0;
-            white-space: nowrap;
-            width: 100%;
-        " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)'" 
-           onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='none'"
-           onmousedown="this.style.transform='translateY(0px)'">
-            ⬆️ Voltar ao Topo
-        </a>
+        <div style="height: 2.5rem; display: flex; align-items: stretch;">
+            <a href="#page-top" style="
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                height: 100%;
+                padding: 0.5rem 1rem;
+                background-color: rgb(19, 23, 32);
+                color: rgb(250, 250, 250);
+                border: 1px solid rgb(70, 72, 83);
+                border-radius: 0.5rem;
+                text-decoration: none;
+                font-weight: 400;
+                font-size: 0.875rem;
+                box-sizing: border-box;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                white-space: nowrap;
+                font-family: 'Source Sans Pro', sans-serif;
+            " onmouseover="this.style.borderColor='rgb(255, 75, 75)'; this.style.color='rgb(255, 75, 75)'" 
+               onmouseout="this.style.borderColor='rgb(70, 72, 83)'; this.style.color='rgb(250, 250, 250)'">
+                ⬆️ Voltar ao Topo
+            </a>
+        </div>
         """, unsafe_allow_html=True)
 
 

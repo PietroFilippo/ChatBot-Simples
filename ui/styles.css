@@ -129,23 +129,27 @@
     scroll-margin-bottom: 100px;
 }
 
-/* Estilos para botões do chatbot */
+/* Estilos para botões do chatbot - COMPATIBILIDADE TOTAL */
 .stColumns > div {
     padding: 0 0.25rem !important;
     margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-end !important;
 }
 
 /* Estilos unificados para todos os botões Streamlit */
 .stButton > button {
     width: 100% !important;
     border-radius: 8px !important;
-    font-weight: 500 !important;
+    font-weight: 400 !important;
     transition: all 0.2s ease !important;
-    border: 1px solid transparent !important;
+    border: 1px solid rgb(70, 72, 83) !important;
     padding: 0.5rem 1rem !important;
     font-size: 0.875rem !important;
     height: 2.5rem !important;
     min-height: 2.5rem !important;
+    max-height: 2.5rem !important;
     box-sizing: border-box !important;
     margin: 0 !important;
     display: inline-flex !important;
@@ -154,18 +158,48 @@
     white-space: nowrap !important;
     text-overflow: ellipsis !important;
     overflow: hidden !important;
+    background-color: rgb(19, 23, 32) !important;
+    color: rgb(250, 250, 250) !important;
+    font-family: 'Source Sans Pro', sans-serif !important;
 }
 
-/* Efeito hover para botões Streamlit */
-.stButton > button:hover {
+/* Estilos específicos para botões de ação principais - esquema laranja */
+.stButton > button[kind="primary"],
+button[data-testid*="clear_btn"],
+button[data-testid*="sentiment_analyze_btn"],
+button[data-testid*="summarizer_btn"] {
+    background-color: #ff6b35 !important;
+    color: white !important;
+    border: 1px solid #ff6b35 !important;
+    font-weight: 500 !important;
+}
+
+/* Hover para botões laranja */
+.stButton > button[kind="primary"]:hover,
+button[data-testid*="clear_btn"]:hover,
+button[data-testid*="sentiment_analyze_btn"]:hover,
+button[data-testid*="summarizer_btn"]:hover {
+    background-color: #e55a2b !important;
+    border-color: #e55a2b !important;
     transform: translateY(-1px) !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 4px 8px rgba(255, 107, 53, 0.3) !important;
+}
+
+/* Efeito hover para botões padrão */
+.stButton > button:hover {
+    border-color: rgb(255, 75, 75) !important;
+    color: rgb(255, 75, 75) !important;
+    transform: none !important;
+    box-shadow: none !important;
 }
 
 /* Força altura consistente no container */
 .stButton {
     height: 2.5rem !important;
     min-height: 2.5rem !important;
+    max-height: 2.5rem !important;
+    display: flex !important;
+    align-items: stretch !important;
 }
 
 /* Alinhamento das colunas */
@@ -173,4 +207,6 @@ div[data-testid="column"] {
     display: flex !important;
     flex-direction: column !important;
     align-items: stretch !important;
+    justify-content: flex-end !important;
+    min-height: 2.5rem !important;
 } 
