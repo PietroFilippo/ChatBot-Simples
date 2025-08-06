@@ -6,7 +6,10 @@ Versão otimizada que maximiza o uso da capacidade real dos modelos.
 from typing import Dict, Any, Optional
 from src.interfaces import ILLMService, IChatbotService
 from src.context_manager import IntelligentContextManager
+from src.config import GlobalConfig
 from datetime import datetime
+
+logger = GlobalConfig.get_logger('chatbot')
 
 class IntelligentChatbotV2(IChatbotService):
     """
@@ -42,6 +45,8 @@ class IntelligentChatbotV2(IChatbotService):
         
         # Histórico completo para export/analytics
         self.full_conversation_history = []
+        
+        logger.info(f"Chatbot inteligente inicializado: personalidade={personality}, modelo={current_model}")
     
     def _get_current_model_name(self) -> str:
         """Obtém o nome do modelo atual do provider."""
@@ -49,9 +54,13 @@ class IntelligentChatbotV2(IChatbotService):
             if hasattr(self._llm_service, 'get_current_provider'):
                 provider = self._llm_service.get_current_provider()
                 if provider and hasattr(provider, 'get_current_model'):
-                    return provider.get_current_model()
+                    model_name = provider.get_current_model()
+                    logger.debug(f"Modelo atual obtido: {model_name}")
+                    return model_name
+            logger.debug("Usando modelo padrão (default)")
             return "default"
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Erro ao obter modelo atual, usando default: {e}")
             return "default"
     
     def _get_personality_prompt(self) -> str:
@@ -67,7 +76,9 @@ originais e interessantes. Seja expressivo, use analogias e exemplos criativos q
 Use terminologia técnica apropriada e inclua exemplos práticos quando relevante. Seja conciso mas completo."""
         }
         
-        return personality_prompts.get(self.personality, personality_prompts["helpful"])
+        prompt = personality_prompts.get(self.personality, personality_prompts["helpful"])
+        logger.debug(f"Prompt de personalidade definido: {self.personality}")
+        return prompt
     
     def chat(self, message: str) -> str:
         """
@@ -80,9 +91,13 @@ Use terminologia técnica apropriada e inclua exemplos práticos quando relevant
             Resposta otimizada do chatbot
         """
         if not self._llm_service.is_available():
-            return "❌ Serviço LLM não disponível. Configure uma API key."
+            error_msg = "❌ Serviço LLM não disponível. Configure uma API key."
+            logger.warning("Tentativa de chat com serviço LLM indisponível")
+            return error_msg
         
         try:
+            logger.info(f"Processando mensagem: {len(message)} chars")
+            
             # Verifica se modelo mudou e atualiza contexto se necessário
             self._check_and_update_model()
             
@@ -94,10 +109,12 @@ Use terminologia técnica apropriada e inclua exemplos práticos quando relevant
                 # Usa formato de mensagens se suportado
                 context = self.context_manager.get_context_messages()
                 response = self._llm_service.generate_response_from_messages(context)
+                logger.debug("Usando formato de mensagens estruturadas")
             else:
                 # Usa formato de string tradicional
                 context = self.context_manager.get_context_for_model()
                 response = self._llm_service.generate_response(f"{context}\n\nUsuário: {message}")
+                logger.debug("Usando formato de string tradicional")
             
             # Adiciona resposta do assistente ao contexto
             provider_name = self._get_current_provider_name()
@@ -106,26 +123,31 @@ Use terminologia técnica apropriada e inclua exemplos práticos quando relevant
             # Atualiza histórico completo
             self._update_full_history(message, response)
             
+            logger.info(f"Resposta gerada com sucesso: {len(response)} chars")
             return response
             
         except Exception as e:
             error_msg = f"❌ Erro no chatbot inteligente: {str(e)}"
-            print(error_msg)
+            logger.error(f"Erro no processamento do chat: {e}")
             return error_msg
     
     def _check_and_update_model(self) -> None:
         """Verifica se o modelo mudou e atualiza o contexto se necessário."""
         current_model = self._get_current_model_name()
         if current_model != self.context_manager.model_name:
+            logger.info(f"Modelo alterado: {self.context_manager.model_name} -> {current_model}")
             self.context_manager.update_model(current_model)
     
     def _get_current_provider_name(self) -> str:
         """Obtém o nome do provider atual."""
         try:
             if hasattr(self._llm_service, 'get_current_provider_name'):
-                return self._llm_service.get_current_provider_name()
+                name = self._llm_service.get_current_provider_name()
+                logger.debug(f"Provider atual: {name}")
+                return name
             return "unknown"
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Erro ao obter nome do provider: {e}")
             return "unknown"
     
     def _update_full_history(self, user_message: str, bot_response: str) -> None:
@@ -139,12 +161,14 @@ Use terminologia técnica apropriada e inclua exemplos práticos quando relevant
             "context_stats": self.context_manager.get_stats()
         }
         self.full_conversation_history.append(interaction)
+        logger.debug(f"Histórico atualizado: {len(self.full_conversation_history)} interações")
     
     def clear_memory(self) -> None:
         """Limpa toda a memória do chatbot."""
+        old_count = len(self.full_conversation_history)
         self.context_manager.clear_context()
         self.full_conversation_history.clear()
-        print("🧹 Memória do chatbot inteligente limpa")
+        logger.info(f"Memória limpa: {old_count} interações removidas")
     
     def get_stats(self) -> Dict[str, Any]:
         """
@@ -166,7 +190,7 @@ Use terminologia técnica apropriada e inclua exemplos práticos quando relevant
                     valid_interactions.append(interaction)
                 else:
                     # Log de debug para problemas de formato
-                    print(f"⚠️  Interação com formato inválido ignorada: {type(interaction)}")
+                    logger.debug(f"⚠️  Interação com formato inválido ignorada: {type(interaction)}")
             
             if valid_interactions:
                 # Calcula médias de tamanho apenas com interações válidas

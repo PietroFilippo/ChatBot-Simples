@@ -8,6 +8,8 @@ from typing import Dict, List, Any, Optional
 from src.interfaces import ILLMProvider
 from src.config import GlobalConfig
 
+logger = GlobalConfig.get_logger('base_provider')
+
 
 class BaseProvider(ILLMProvider, ABC):
     """
@@ -25,10 +27,12 @@ class BaseProvider(ILLMProvider, ABC):
         # Rastreamento de estatísticas (comum a todos os provedores)
         self.request_count = 0
         self.error_count = 0
+        self.validation_error_count = 0  # Novo: erros de validação pós-resposta
         self.last_request_time = None
         
         # Inicializa a configuração específica do provedor
         self._setup()
+        logger.info(f"Provedor {self.name} inicializado")
     
     @abstractmethod
     def _setup(self):
@@ -62,6 +66,7 @@ class BaseProvider(ILLMProvider, ABC):
         Delega a geração real para _generate_response_impl.
         """
         if not self.is_available():
+            logger.warning(f"Provedor {self.name} não disponível")
             return f"Provedor {self.name} não disponível. Verifique a configuração."
         
         try:
@@ -69,21 +74,45 @@ class BaseProvider(ILLMProvider, ABC):
             self.request_count += 1
             self.last_request_time = time.time()
             
+            logger.debug(f"Gerando resposta via {self.name} (request #{self.request_count})")
+            
             # Delega para a implementação específica do provedor
-            return self._generate_response_impl(message, **kwargs)
+            response = self._generate_response_impl(message, **kwargs)
+            
+            logger.debug(f"Resposta gerada: {len(response) if response else 0} chars")
+            return response
             
         except Exception as e:
             self.error_count += 1
-            return f"Erro na API {self.name}: {str(e)}"
+            error_msg = f"Erro na API {self.name}: {str(e)}"
+            logger.error(f"Erro no provedor {self.name}: {e}")
+            return error_msg
+    
+    def increment_validation_error(self, error_type: str = "validation"):
+        """
+        Incrementa contador de erros de validação pós-resposta.
+        
+        Args:
+            error_type: Tipo do erro para logging
+        """
+        self.validation_error_count += 1
+        logger.warning(f"Erro de {error_type} incrementado para {self.name}: total {self.validation_error_count}")
+    
+    def get_total_errors(self) -> int:
+        """Retorna o total de erros (API + validação)."""
+        return self.error_count + self.validation_error_count
     
     def get_stats(self) -> Dict[str, Any]:
         """Retorna estatísticas comuns para todos os provedores."""
+        total_errors = self.get_total_errors()
         return {
             "request_count": self.request_count,
             "error_count": self.error_count,
+            "validation_error_count": self.validation_error_count,
+            "total_errors": total_errors,
             "last_request_time": self.last_request_time,
             "success_rate": (
-                (self.request_count - self.error_count) / self.request_count 
+                (self.request_count - total_errors) / self.request_count 
                 if self.request_count > 0 else 0
             )
         }
@@ -91,11 +120,14 @@ class BaseProvider(ILLMProvider, ABC):
     def get_performance_stats(self) -> Dict[str, Any]:
         """Retorna estatísticas de desempenho para todos os provedores."""
         uptime = time.time() - (self.last_request_time or time.time())
-        success_rate = ((self.request_count - self.error_count) / max(self.request_count, 1)) * 100
+        total_errors = self.get_total_errors()
+        success_rate = ((self.request_count - total_errors) / max(self.request_count, 1)) * 100
         
         return {
             "requests_made": self.request_count,
-            "errors": self.error_count,
+            "api_errors": self.error_count,
+            "validation_errors": self.validation_error_count,
+            "total_errors": total_errors,
             "success_rate": f"{success_rate:.1f}%",
             "last_request": self.last_request_time,
             "uptime_minutes": max(0, uptime / 60),

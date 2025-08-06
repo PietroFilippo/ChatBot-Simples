@@ -4,6 +4,8 @@ Centraliza todas as configurações para facilitar manutenção.
 """
 
 import os
+import logging
+import sys
 from typing import Dict, Any
 from dotenv import load_dotenv
 
@@ -26,6 +28,67 @@ class GlobalConfig:
     # Configurações de log
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
     DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
+    
+    @classmethod
+    def setup_logging(cls) -> logging.Logger:
+        """
+        Configura o sistema de logging estruturado.
+        
+        Returns:
+            Logger configurado
+        """
+        # Configura o logger raiz
+        logger = logging.getLogger('chatbot')
+        logger.setLevel(getattr(logging, cls.LOG_LEVEL.upper(), logging.INFO))
+        
+        # Remove handlers existentes para evitar duplicação
+        if logger.handlers:
+            logger.handlers.clear()
+        
+        # Formatter estruturado
+        formatter = logging.Formatter(
+            fmt='%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+        
+        # Handler para console
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setFormatter(formatter)
+        logger.addHandler(console_handler)
+        
+        # Handler para arquivo em produção
+        if not cls.DEBUG_MODE:
+            try:
+                os.makedirs('logs', exist_ok=True)
+                file_handler = logging.FileHandler('logs/chatbot.log', encoding='utf-8')
+                file_handler.setFormatter(formatter)
+                logger.addHandler(file_handler)
+            except Exception as e:
+                logger.warning(f"Não foi possível criar log de arquivo: {e}")
+        
+        # Configura loggers de bibliotecas externas para reduzir spam
+        logging.getLogger('urllib3').setLevel(logging.WARNING)
+        logging.getLogger('requests').setLevel(logging.WARNING)
+        logging.getLogger('httpx').setLevel(logging.WARNING)
+        
+        logger.info("Sistema de logging configurado")
+        return logger
+    
+    @classmethod
+    def get_logger(cls, name: str = None) -> logging.Logger:
+        """
+        Retorna um logger configurado.
+        
+        Args:
+            name: Nome do logger (usa o módulo se não especificado)
+            
+        Returns:
+            Logger configurado
+        """
+        if name is None:
+            name = 'chatbot'
+        
+        return logging.getLogger(f'chatbot.{name}')
     
     @classmethod
     def get_generation_params(cls, **overrides) -> Dict[str, Any]:
@@ -79,4 +142,8 @@ class GlobalConfig:
             "max_retries": cls.MAX_RETRIES,
             "log_level": cls.LOG_LEVEL,
             "debug_mode": cls.DEBUG_MODE
-        } 
+        }
+
+
+# Inicializa o logging quando o módulo é importado
+GlobalConfig.setup_logging() 
