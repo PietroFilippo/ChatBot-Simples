@@ -165,8 +165,8 @@ class ButtonController:
     
     def create_action_buttons(self, message_count: int) -> Dict[str, bool]:
         """Cria botões de ação e retorna estado."""
-        # Layout simplificado - apenas 2 colunas para Limpar e Voltar ao Topo
-        col1, col2 = st.columns([1, 1])
+        # Layout consistente com outras abas - [1, 1, 4] para compatibilidade
+        col1, col2, col3 = st.columns([1, 1, 4])
         
         buttons = {}
         
@@ -175,6 +175,8 @@ class ButtonController:
         
         with col2:
             self._render_back_to_top_button()
+        
+        # col3 fica vazia para manter proporção consistente
         
         return buttons
     
