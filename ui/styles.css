@@ -132,19 +132,45 @@
 /* Estilos para botões do chatbot */
 .stColumns > div {
     padding: 0 0.25rem !important;
+    margin: 0 !important;
 }
 
+/* Estilos unificados para todos os botões Streamlit */
 .stButton > button {
-    width: 100%;
-    border-radius: 8px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    border: 1px solid transparent;
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
+    width: 100% !important;
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+    border: 1px solid transparent !important;
+    padding: 0.5rem 1rem !important;
+    font-size: 0.875rem !important;
+    height: 2.5rem !important;
+    min-height: 2.5rem !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+    overflow: hidden !important;
 }
 
+/* Efeito hover para botões Streamlit */
 .stButton > button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Força altura consistente no container */
+.stButton {
+    height: 2.5rem !important;
+    min-height: 2.5rem !important;
+}
+
+/* Alinhamento das colunas */
+div[data-testid="column"] {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
 } 

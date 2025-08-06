@@ -165,38 +165,33 @@ class ButtonController:
     
     def create_action_buttons(self, message_count: int) -> Dict[str, bool]:
         """Cria botões de ação e retorna estado."""
-        col1, col2, col3, col4 = st.columns([1, 1, 1, 1.3])
+        # Layout simplificado - apenas 2 colunas para Limpar e Voltar ao Topo
+        col1, col2 = st.columns([1, 1])
         
         buttons = {}
         
         with col1:
-            buttons["send"] = st.button("📤 Enviar", type="primary", key=f"send_btn_{message_count}")
-        
-        with col2:
             buttons["clear"] = st.button("🧹 Limpar", key=f"clear_btn_{message_count}")
         
-        with col3:
-            buttons["example"] = st.button("🎲 Exemplo", key=f"example_btn_{message_count}")
-        
-        with col4:
+        with col2:
             self._render_back_to_top_button()
         
         return buttons
     
     def _render_back_to_top_button(self) -> None:
-        """Renderiza botão de voltar ao topo usando HTML com âncora"""
+        """Renderiza botão de voltar ao topo otimizado para compatibilidade"""
         st.markdown("""
         <a href="#page-top" style="
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 0.25rem 0.75rem;
+            padding: 0.5rem 1rem;
             background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
             color: white;
             text-decoration: none;
             border-radius: 0.5rem;
             text-align: center;
-            font-weight: 400;
+            font-weight: 500;
             font-size: 0.875rem;
             line-height: 1.6;
             height: 2.5rem;
@@ -204,9 +199,10 @@ class ButtonController:
             box-sizing: border-box;
             cursor: pointer;
             border: 1px solid transparent;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.2s ease;
             margin: 0;
             white-space: nowrap;
+            width: 100%;
         " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)'" 
            onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='none'"
            onmousedown="this.style.transform='translateY(0px)'">

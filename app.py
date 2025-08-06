@@ -472,103 +472,25 @@ def chatbot_tab():
             len(st.session_state.chat_history)
         )
         
-        # CSS personalizado para os botões do chatbot - COMPATÍVEL COM STREAMLIT CLOUD
-        st.markdown("""
-        <style>
-        .stButton > button {
-            width: 100% !important;
-            border-radius: 8px !important;
-            font-weight: 500 !important;
-            transition: all 0.2s ease !important;
-            border: 1px solid transparent !important;
-            padding: 0.5rem 1rem !important;
-            font-size: 0.875rem !important;
-            height: 2.5rem !important;
-            min-height: 2.5rem !important;
-            box-sizing: border-box !important;
-        }
-        
-        /* Remove espaçamento extra das colunas */
-        .stColumns > div {
-            padding: 0 0.25rem !important;
-        }
-        
-        /* Efeito hover compatível */
-        .stButton > button:hover {
-            transform: translateY(-1px) !important;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-        }
-        
-        /* Força altura consistente */
-        .stButton {
-            height: 2.5rem !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-        
-        # Layout de botões simplificado e compatível
-        col1, col2 = st.columns([1, 1])
-        
-        with col1:
-            clear_btn = st.button("🧹 Limpar Chat", key=f"clear_btn_{len(st.session_state.chat_history)}", type="secondary")
-        
-        with col2:
-            # Botão "Voltar ao Topo" usando HTML com âncora
-            st.markdown("""
-            <a href="#page-top" style="
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                padding: 0.5rem 1rem;
-                background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                text-decoration: none;
-                border-radius: 8px;
-                text-align: center;
-                font-weight: 500;
-                font-size: 0.875rem;
-                line-height: 1.6;
-                height: 2.5rem;
-                min-height: 2.5rem;
-                box-sizing: border-box;
-                cursor: pointer;
-                border: 1px solid transparent;
-                transition: all 0.2s ease;
-                margin: 0;
-                white-space: nowrap;
-                width: 100%;
-            " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'" 
-               onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='none'"
-               onmousedown="this.style.transform='translateY(0px)'">
-                ⬆️ Voltar ao Topo
-            </a>
-            """, unsafe_allow_html=True)
+        # Usa os botões do ButtonController (implementação consistente)
+        buttons = button_controller.create_action_buttons(len(st.session_state.chat_history))
         
         # Processa ações dos botões
-        if clear_btn:
-            _handle_clear_chat()
-            return
+        if buttons.get("clear"):
+            if hasattr(st.session_state, 'chatbot'):
+                st.session_state.chatbot.clear_memory()
+            st.session_state.chat_history = []
+            st.success("Chat limpo com sucesso!")
+            logger.info("Chat limpo pelo usuário")
+            st.rerun()
         
-        # Processa entrada do usuário
-        if user_input:
+        # Processa mensagem quando usuário digita
+        if user_input and user_input.strip():
             _handle_send_message(user_input, validator)
-            
+                    
     except Exception as e:
-        logger.error(f"Erro na aba do chatbot: {e}")
-        st.error("Erro ao carregar interface do chatbot")
-
-
-def _handle_clear_chat():
-    """Processa ação de limpar chat."""
-    try:
-        st.session_state.chatbot.clear_memory()
-        st.session_state.chat_history = []
-        st.success(SUCCESS_MESSAGES["HISTORY_CLEARED"])
-        logger.info("Histórico do chat limpo")
-        st.rerun()
-    except Exception as e:
-        logger.error(f"Erro ao limpar chat: {e}")
-        st.error("Erro ao limpar histórico")
+        logger.error(f"Erro na interface do chatbot: {e}")
+        st.error("Erro na interface do chatbot. Verifique os logs para mais detalhes.")
 
 
 def _handle_send_message(user_input: str, validator):
