@@ -165,18 +165,22 @@ class ButtonController:
     
     def create_action_buttons(self, message_count: int) -> Dict[str, bool]:
         """Cria botões de ação e retorna estado."""
-        # Layout consistente com outras abas - [1, 1, 4] para compatibilidade
-        col1, col2, col3 = st.columns([1, 1, 4])
+        # botões agrupados a esquerda
+        col_buttons, col_empty = st.columns([2, 4])
         
         buttons = {}
         
-        with col1:
-            buttons["clear"] = st.button("🧹 Limpar", type="primary", key=f"clear_btn_{message_count}")
+        with col_buttons:
+            # Subcolunas dentro da área dos botões para ficarem lado a lado
+            subcol1, subcol2 = st.columns([1, 1])
+            
+            with subcol1:
+                buttons["clear"] = st.button("🧹 Limpar", type="primary", key=f"clear_btn_{message_count}")
+            
+            with subcol2:
+                self._render_back_to_top_button()
         
-        with col2:
-            self._render_back_to_top_button()
-        
-        # col3 fica vazia para manter proporção consistente
+        # col_empty permanece vazia para manter layout consistente
         
         return buttons
     
