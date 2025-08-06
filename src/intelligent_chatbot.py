@@ -255,18 +255,98 @@ Use terminologia técnica apropriada e inclua exemplos práticos quando relevant
         Exporta toda a conversa com metadados avançados.
         
         Returns:
-            Dicionário completo da conversa
+            Dicionário no formato esperado pelo app.py
         """
-        return {
-            "metadata": {
-                "personality": self.personality,
-                "export_timestamp": datetime.now().isoformat(),
-                "total_interactions": len(self.full_conversation_history),
-                "session_stats": self.get_stats()
-            },
-            "conversation_history": self.full_conversation_history,
-            "analytics": self.get_context_analytics()
-        }
+        try:
+            # Dados básicos da exportação
+            export_data = {
+                "metadata": {
+                    "personality": self.personality,
+                    "export_timestamp": datetime.now().isoformat(),
+                    "total_interactions": len(self.full_conversation_history),
+                    "session_stats": self.get_stats()
+                },
+                "conversation_history": self.full_conversation_history,
+                "analytics": self.get_context_analytics(),
+                "export_info": {
+                    "total_messages": len(self.full_conversation_history),
+                    "export_format": "intelligent_chatbot_v2"
+                }
+            }
+            
+            # Gera conteúdo JSON
+            import json
+            json_content = json.dumps(export_data, indent=2, ensure_ascii=False, default=str)
+            
+            # Gera conteúdo TXT legível
+            txt_lines = [
+                f"=== CONVERSA EXPORTADA ===",
+                f"Personalidade: {self.personality}",
+                f"Data/Hora: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}",
+                f"Total de mensagens: {len(self.full_conversation_history)}",
+                f"",
+                f"=== HISTÓRICO DA CONVERSA ===",
+                f""
+            ]
+            
+            for i, interaction in enumerate(self.full_conversation_history, 1):
+                if isinstance(interaction, dict) and "user" in interaction and "bot" in interaction:
+                    timestamp = interaction.get("timestamp", "")
+                    if timestamp:
+                        try:
+                            dt = datetime.fromisoformat(timestamp)
+                            time_str = dt.strftime("%H:%M:%S")
+                        except:
+                            time_str = timestamp[:19] if len(timestamp) > 19 else timestamp
+                    else:
+                        time_str = "N/A"
+                    
+                    txt_lines.extend([
+                        f"--- Interação {i} ({time_str}) ---",
+                        f"👤 Usuário: {interaction['user']}",
+                        f"🤖 Bot: {interaction['bot']}",
+                        f"Provider: {interaction.get('provider', 'N/A')}",
+                        f"Modelo: {interaction.get('model', 'N/A')}",
+                        f""
+                    ])
+            
+            # Adiciona estatísticas ao final
+            stats = self.get_stats()
+            txt_lines.extend([
+                f"=== ESTATÍSTICAS DA SESSÃO ===",
+                f"Personalidade: {stats['personality']}",
+                f"Total de interações: {stats['total_interactions']}",
+                f"Duração da sessão: {stats['session_duration_minutes']:.1f} minutos",
+                f"Tamanho médio - Usuário: {stats['avg_user_length']:.0f} chars",
+                f"Tamanho médio - Bot: {stats['avg_bot_length']:.0f} chars",
+                f"Providers usados: {', '.join(stats['providers_used'])}",
+                f"Contexto inteligente: Ativo",
+                f"Método de contagem: {stats['token_counting_method']}",
+                f"Tokens no contexto: {stats.get('total_tokens', 'N/A')}",
+                f"Utilização do contexto: {stats.get('utilization_percentage', 0):.1f}%",
+            ])
+            
+            txt_content = "\n".join(txt_lines)
+            
+            # Nomes dos arquivos
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename_json = f"conversa_chatbot_{timestamp}.json"
+            filename_txt = f"conversa_chatbot_{timestamp}.txt"
+            
+            return {
+                "success": True,
+                "json_content": json_content,
+                "filename_json": filename_json,
+                "txt_content": txt_content,
+                "filename_txt": filename_txt,
+                "export_data": export_data
+            }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Erro ao exportar conversa: {str(e)}"
+            }
     
     def optimize_context_for_model(self, model_name: str) -> Dict[str, Any]:
         """
