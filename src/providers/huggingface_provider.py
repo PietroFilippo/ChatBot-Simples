@@ -19,18 +19,20 @@ class HuggingFaceProvider(BaseProvider):
     
     def __init__(self):
         # Define modelo padrão e current_model ANTES de chamar super()
-        self.default_model = "google/gemma-2-2b-it"
+        self.default_model = "openai/gpt-oss-120b"
         self.current_model = os.getenv("HUGGINGFACE_DEFAULT_MODEL", self.default_model) or self.default_model
         
         # Chama o construtor da classe base com configurações específicas
         super().__init__(
             name="huggingface",
             available_models=[
+                "openai/gpt-oss-120b",
                 "google/gemma-2-2b-it",
                 "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
                 "microsoft/phi-4",
                 "Qwen/Qwen2.5-Coder-32B-Instruct",
-                "deepseek-ai/DeepSeek-R1"
+                "deepseek-ai/DeepSeek-R1",
+                "openai/gpt-oss-20b"
             ]
         )
         self.base_url = "https://router.huggingface.co/v1/chat/completions"

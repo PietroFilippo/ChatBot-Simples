@@ -75,11 +75,13 @@ class IntelligentContextManager:
         "gemma2-9b-it": ModelContextLimits(8192, 1000, 200),
         
         # HuggingFace Models  
+        "openai/gpt-oss-120b": ModelContextLimits(131072, 4000, 1000),
         "google/gemma-2-2b-it": ModelContextLimits(8192, 1000, 200),
         "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": ModelContextLimits(32768, 2000, 500),
         "microsoft/phi-4": ModelContextLimits(16384, 1500, 300),
         "Qwen/Qwen2.5-Coder-32B-Instruct": ModelContextLimits(32768, 2000, 500),
-        "deepseek-ai/DeepSeek-R1": ModelContextLimits(131072, 4000, 1000),
+        "deepseek-ai/DeepSeek-R1": ModelContextLimits(131072, 4000, 1000), 
+        "openai/gpt-oss-20b": ModelContextLimits(131072, 4000, 1000),
         
         # Fallback padrão
         "default": ModelContextLimits(4096, 1000, 200)

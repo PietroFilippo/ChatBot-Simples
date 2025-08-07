@@ -151,15 +151,15 @@
 
 /* Apenas os botões principais em laranja - SEM !important excessivo */
 .stButton > button[kind="primary"] {
-    background-color: #ff6b35;
+    background-color: hsl(0, 69%, 42%);
     color: white;
-    border: 1px solid #ff6b35;
+    border: 1px solid hsl(0, 69%, 42%);
     font-weight: 500;
 }
 
 .stButton > button[kind="primary"]:hover {
-    background-color: #e55a2b;
-    border-color: #e55a2b;
+    background-color: hsl(0, 69%, 42%);
+    border-color: hsl(0, 69%, 42%);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
 } 

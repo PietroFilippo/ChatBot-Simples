@@ -246,7 +246,7 @@ GROQ_API_KEY={groq_key}
 
 HUGGINGFACE_API_KEY={hf_key}
 HF_TOKEN={hf_key}
-HUGGINGFACE_DEFAULT_MODEL=google/gemma-2-2b-it
+HUGGINGFACE_DEFAULT_MODEL=openai/gpt-oss-120b
 """
     else:
         env_content += """

@@ -61,7 +61,7 @@
 
 ### 1. **Clonar o Repositório**
 ```bash
-git clone <ChatBot-Simples>
+git clone https://github.com/PietroFilippo/ChatBot-Simples
 cd ChatBot
 ```
 
@@ -190,14 +190,14 @@ Templates atualizados incluem configurações globais, estatísticas de performa
 #### **Groq Provider (`src/providers/groq_provider.py`)**
 - **Ultra-rápido** - API otimizada para velocidade
 - **Gratuito** - 30 requests/minuto sem custo
-- **Modelos**: Llama 3 70B, Llama 3 8B
+- **Modelos**: Llama 3 70B, Llama 3 8B, Gemma 2 9B
 - **Configurações globais** aplicadas automaticamente
 - **Context limits**: 8192 tokens com otimização automática
 
 #### **Hugging Face Provider (`src/providers/huggingface_provider.py`)**
 - **91+ modelos** disponíveis via API unificada
 - **OpenAI-compatible** - formato de requisição padronizado
-- **Modelos testados**: Gemma 2, DeepSeek R1, Phi-4, Qwen2.5-Coder
+- **Modelos testados**: Gemma 2 2B, DeepSeek R1 Distill 1.5B, Microsoft Phi-4, Qwen 2.5 Coder 32B, DeepSeek R1, GPT Oss 20B & GPT Oss 120B
 - **Rate limits generosos** - 1,000+ requests/dia gratuito
 - **Context limits variados**: de 8K a 131K tokens dependendo do modelo
 

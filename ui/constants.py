@@ -83,11 +83,13 @@ MODEL_NAMES = {
     "gemma2-9b-it": "🔷 Gemma 2 9B",
     
     # Hugging Face models
+    "openai/gpt-oss-120b": "💻 GPT-OSS 120B",
     "google/gemma-2-2b-it": "🔷 Gemma 2 2B Instruct",
     "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": "🧠 DeepSeek R1 Distill 1.5B",
     "microsoft/phi-4": "🔷 Microsoft Phi-4",
     "Qwen/Qwen2.5-Coder-32B-Instruct": "💻 Qwen 2.5 Coder 32B",
     "deepseek-ai/DeepSeek-R1": "🧠 DeepSeek R1 (Reasoning)",
+    "openai/gpt-oss-20b": "💻 GPT-OSS 20B",	
 }
 
 # Informações do sistema
@@ -107,6 +109,7 @@ SYSTEM_INFO = {
         "gemma2-9b-it": {"size": "9B", "speed": "Rápido", "quality": "Bom", "context": "8K"},
         
         # Hugging Face models
+        "openai/gpt-oss-120b": {"size": "120B", "speed": "Rápido", "quality": "Excelente", "context": "128K"},
         "google/gemma-2-2b-it": {"size": "2B", "speed": "Rápido", "quality": "Bom", "context": "8K"},
         "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": {"size": "1.5B", "speed": "Rápido", "quality": "Bom", "context": "32K"},
         "microsoft/phi-4": {"size": "14B", "speed": "Rápido", "quality": "Muito Bom", "context": "16K"},
@@ -117,6 +120,12 @@ SYSTEM_INFO = {
             "quality": "Excepcional", 
             "context": "128K",
             "special": "🧠 Modelo de Reasoning - Demora mais para responder pois 'pensa' antes de dar a resposta final. O output inclui o processo de raciocínio completo."
+        },
+        "openai/gpt-oss-20b": {
+            "size": "21.5B",
+            "speed": "Rápido",
+            "quality": "Excelente",
+            "context": "131K",
         }
     },
     "CONFIG_GUIDE": """
