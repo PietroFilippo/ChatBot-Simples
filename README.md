@@ -12,7 +12,9 @@
 - **Configurações Globais Centralizadas** - Parâmetros unificados para todos os providers
 
 ### Chatbot Inteligente
-- **Conversa natural** com memória de contexto
+- **Gerenciamento Adaptativo de Contexto** - Sistema inteligente que otimiza automaticamente o uso do contexto baseado na capacidade real dos modelos
+- **Contagem Precisa de Tokens** - Usando tiktoken para contagem exata ou fallback heurístico
+- **Otimização Automática** - Poda inteligente de mensagens mantendo as mais importantes e recentes
 - **Diferentes personalidades** configuráveis (helpful, creative, technical)
 - **Switching dinâmico** entre provedores LLM
 - **Interface moderna** com componentes UI especializados
@@ -31,9 +33,16 @@
 
 ### Analytics & Monitoramento
 - **Status em tempo real** dos provedores
-- **Métricas de performance** e uso
+- **Métricas de performance** e uso com contagem precisa de erros
 - **Estatísticas da sessão** detalhadas
 - **Dashboard de configurações globais**
+
+### Segurança & Logging
+- **Proteção XSS** - Sanitização completa de HTML e entrada do usuário
+- **Rate Limiting** - Proteção contra spam e ataques DoS
+- **Logging Estruturado** - Sistema profissional de logs com níveis e arquivos
+- **Validação de Entrada** - Sanitização automática de todos os inputs
+- **Contagem Precisa de Erros** - Rastreamento de erros de API e validação
 
 ## Tecnologias Utilizadas
 
@@ -46,6 +55,7 @@
 - **🔧 Pydantic** - Validação de dados
 - **📦 Pandas/NumPy** - Manipulação de dados
 - **🏗️ ABC (Abstract Base Classes)** - Interfaces e contratos
+- **🔒 Tiktoken** - Contagem precisa de tokens
 
 ## Configuração e Execução
 
@@ -90,6 +100,10 @@ HUGGINGFACE_API_KEY=sua_chave_hf_aqui
 GLOBAL_TEMPERATURE=0.7
 GLOBAL_MAX_TOKENS=1000
 API_TIMEOUT=30
+
+# Configurações de logging e segurança
+LOG_LEVEL=INFO
+DEBUG_MODE=false
 ```
 
 **Para obter chaves gratuitas:**
@@ -135,8 +149,9 @@ Templates atualizados incluem configurações globais, estatísticas de performa
 #### **1. BaseProvider (`src/providers/base_provider.py`)**
 - **Elimina duplicação** - Centraliza funcionalidades comuns entre providers
 - **Abstract Base Class** - Define interface obrigatória para todos os providers
-- **Statistics tracking** - Métricas de performance padronizadas
+- **Statistics tracking** - Métricas de performance padronizadas com contagem precisa de erros
 - **Error handling** - Tratamento de erros consistente
+- **Logging estruturado** - Sistema profissional de logs integrado
 
 #### **2. Provider Registry (`src/provider_registry.py`)**
 - **Registro automático** de novos provedores
@@ -144,19 +159,27 @@ Templates atualizados incluem configurações globais, estatísticas de performa
 - **Switching dinâmico** entre providers
 - **Fallback** em caso de indisponibilidade
 
-#### **3. Configurações Centralizadas**
-- **Constants (`ui/constants.py`)** - Strings, mensagens e configurações centralizadas
-- **Validations (`ui/common_validations.py`)** - Validações reutilizáveis
-- **Styles (`ui/styles.css`)** - CSS externalizado e organizado
-- **Global Config (`src/config.py`)** - Parâmetros aplicados a todos os providers
+#### **3. Intelligent Context Manager (`src/context_manager.py`)**
+- **Gerenciamento Adaptativo** - Otimiza automaticamente o contexto baseado na capacidade real dos modelos
+- **Contagem Precisa de Tokens** - Usando tiktoken ou fallback heurístico
+- **Poda Inteligente** - Remove mensagens menos importantes mantendo contexto relevante
+- **Configurações por Modelo** - Limites específicos para cada modelo (Groq, HuggingFace, etc.)
+- **Priorização por Importância** - Score de importância para mensagens
 
-#### **4. Componentes UI (`src/ui/components.py`)**
+#### **4. Configurações Centralizadas**
+- **Constants (`ui/constants.py`)** - Strings, mensagens e configurações centralizadas
+- **Validations (`ui/common_validations.py`)** - Validações reutilizáveis com sanitização XSS
+- **Security (`utils/security.py`)** - Módulo completo de segurança e rate limiting
+- **Styles (`ui/styles.css`)** - CSS externalizado e organizado
+- **Global Config (`src/config.py`)** - Parâmetros aplicados a todos os providers + sistema de logging
+
+#### **5. Componentes UI (`src/ui/components.py`)**
 - **Single Responsibility** - cada componente tem uma função específica
 - **Reutilizáveis** - componentes modulares e focados
 - **Factory Pattern** - criação especializada de conjuntos de componentes
 - **Separação clara** entre input, display, validation e settings
 
-#### **5. Interfaces Abstratas (`src/interfaces.py`)**
+#### **6. Interfaces Abstratas (`src/interfaces.py`)**
 - **Contratos claros** entre componentes
 - **Implementação obrigatória** de métodos essenciais
 - **Type safety** com typing hints
@@ -169,12 +192,39 @@ Templates atualizados incluem configurações globais, estatísticas de performa
 - **Gratuito** - 30 requests/minuto sem custo
 - **Modelos**: Llama 3 70B, Llama 3 8B
 - **Configurações globais** aplicadas automaticamente
+- **Context limits**: 8192 tokens com otimização automática
 
 #### **Hugging Face Provider (`src/providers/huggingface_provider.py`)**
 - **91+ modelos** disponíveis via API unificada
 - **OpenAI-compatible** - formato de requisição padronizado
 - **Modelos testados**: Gemma 2, DeepSeek R1, Phi-4, Qwen2.5-Coder
 - **Rate limits generosos** - 1,000+ requests/dia gratuito
+- **Context limits variados**: de 8K a 131K tokens dependendo do modelo
+
+### **Recursos de Segurança**
+
+#### **Proteção XSS**
+- **Sanitização HTML** completa com remoção de scripts e event handlers
+- **Validação de entrada** rigorosa para todos os inputs do usuário
+- **Componentes seguros** - Substituição de `unsafe_allow_html=True` por alternativas seguras
+
+#### **Rate Limiting**
+- **Proteção contra spam** com janela de tempo deslizante
+- **Configurável por funcionalidade** (chat, análise, etc.)
+- **Logging de tentativas** excessivas
+
+#### **Sistema de Logging**
+```python
+# Configuração centralizada
+logger = GlobalConfig.get_logger('module_name')
+logger.info("Mensagem informativa")
+logger.warning("Aviso importante") 
+logger.error("Erro crítico")
+```
+- **Logs em arquivo** para produção (`logs/chatbot.log`)
+- **Níveis configuráveis** (DEBUG, INFO, WARNING, ERROR)
+- **Encoding UTF-8** para caracteres especiais
+- **Rotação automática** de arquivos
 
 ## Como Adicionar um Novo Provedor
 
@@ -209,6 +259,7 @@ Templates atualizados incluem configurações globais, estatísticas de performa
    - **Statistics automáticas** - Tracking de requests, erros, etc.
    - **Error handling** - Tratamento padronizado de erros
    - **Performance stats** - Métricas de performance integradas
+   - **Logging integrado** - Sistema de logs profissional
 
 ### **Método Detalhado: Implementação Customizada**
 
@@ -260,6 +311,7 @@ def get_current_model(self) -> str
 def generate_response(self, message: str, **kwargs) -> str  # Com statistics
 def get_stats(self) -> Dict[str, Any]
 def get_performance_stats(self) -> Dict[str, Any]
+def increment_validation_error(self, error_type: str)  # Para contagem precisa de erros
 
 # Métodos que você deve implementar:
 def _setup(self) -> None  # Configuração específica
@@ -308,6 +360,17 @@ self.max_tokens = params["max_tokens"]
 params = GlobalConfig.get_generation_params(temperature=0.9)
 ```
 
+### 7. **Configurar Context Limits (Opcional)**
+
+Para otimização automática de contexto, adicione limites do seu modelo em `context_manager.py`:
+
+```python
+MODEL_LIMITS = {
+    "meu_modelo": ModelContextLimits(16384, 2000, 300),
+    # max_context_tokens, max_output_tokens, reserved_tokens
+}
+```
+
 ## **Configuração Avançada**
 
 ### **Configurações Globais Centralizadas**
@@ -324,8 +387,9 @@ API_TIMEOUT=30               # Timeout para todas as APIs
 AUTO_RETRY=true              # Retry automático em falhas
 MAX_RETRIES=3                # Máximo de tentativas
 
-# Configurações de desenvolvimento
+# Configurações de desenvolvimento e segurança
 LOG_LEVEL=INFO               # DEBUG, INFO, WARNING, ERROR
+LOG_TO_FILE=true             # Salvar logs em arquivo
 DEBUG_MODE=false             # Modo debug para desenvolvimento
 ```
 
@@ -356,6 +420,7 @@ O `setup_env.py` inclui:
 - [ ] Testes básicos funcionando
 - [ ] Documentação das configurações necessárias
 - [ ] Performance stats automáticas via BaseProvider
+- [ ] Context limits configurados para otimização (opcional)
 - [ ] Atualização das constantes em `ui/constants.py` se necessário
 
 Use a `BaseProvider` como classe base para um novo provider.
@@ -376,10 +441,19 @@ Use a `BaseProvider` como classe base para um novo provider.
 - **Dependency Injection**: Registry modular e testável
 - **Component Segregation**: UI components especializados
 - **Centralized Configuration**: GlobalConfig para configurações unificadas
+- **Intelligent Context Management**: Sistema adaptativo de contexto
+- **Security by Design**: Proteção XSS e rate limiting integrados
 
 ### **Para Desenvolvimento:**
 - **Modo Debug**: Configure `DEBUG_MODE=true` no `.env`
 - **Logs Detalhados**: Configure `LOG_LEVEL=DEBUG`
 - **Configurações Customizadas**: Use overrides no `GlobalConfig`
+- **Monitoramento**: Logs salvos em `logs/chatbot.log`
+
+### **Segurança em Produção:**
+- **Sanitização automática** de todos os inputs
+- **Rate limiting** configurável por funcionalidade
+- **Logging estruturado** para auditoria
+- **Contagem precisa de erros** para monitoramento
 
 ---
